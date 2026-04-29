@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-clean {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Print overrides for dark theme */
+  .markdown-body h1 { @apply !text-2xl !font-bold !text-gray-900 !mt-6 !mb-4; border:none !important; }
+  .markdown-body h2 { @apply !text-xl !font-bold !text-gray-900 !mt-5 !mb-3 normal-case tracking-normal; border:none !important; }
+  .markdown-body p { @apply !text-gray-700 leading-relaxed !mb-4 text-base; }
+  .markdown-body ul { @apply list-disc list-inside !text-gray-700 !mb-4 space-y-1 text-base; }
+  .markdown-body ol { @apply list-decimal list-inside !text-gray-700 !mb-4 space-y-1 text-base; }
+  .markdown-body li::marker { @apply !text-gray-700; }
+  .markdown-body li > input[type="checkbox"] { @apply border-gray-300 bg-white !text-indigo-600; }
+  .markdown-body strong { @apply !text-gray-900; }
+}
+
+.markdown-body h1 {
+  @apply text-xl font-bold text-white mt-6 mb-4;
+}
+
+.markdown-body h2 {
+  @apply text-indigo-400 text-xs font-bold uppercase tracking-widest mt-8 mb-4;
+}
+.markdown-body p {
+  @apply text-slate-300 leading-relaxed text-sm mb-4;
+}
+.markdown-body ul {
+  @apply list-none pl-1 text-slate-300 mb-6 space-y-3 text-sm;
+}
+.markdown-body ul > li {
+  @apply relative pl-5;
+}
+.markdown-body ul > li::before {
+  content: "•";
+  @apply absolute left-0 text-emerald-500 font-bold;
+}
+.markdown-body ol {
+  @apply list-decimal list-inside text-slate-300 mb-6 space-y-3 text-sm;
+}
+.markdown-body li > input[type="checkbox"] {
+  @apply mr-3 w-4 h-4 text-orange-500 rounded border-slate-700 bg-slate-950 focus:ring-orange-500 align-middle;
+}
+/* Revert the bullet for checkbox items so it doesn't show double */
+.markdown-body ul > li:has(input[type="checkbox"])::before {
+  content: none;
+}
+.markdown-body ul > li:has(input[type="checkbox"]) {
+  @apply pl-0 flex items-center bg-slate-950/50 border border-slate-800 rounded-lg p-3;
+}
+.markdown-body strong {
+  @apply font-semibold text-white;
+}
