@@ -68,3 +68,49 @@ Se il file è molto corto o silenzioso, spiegalo gentilmente ma mantieni la stru
     throw new Error("Errore durante l'analisi del file. Potrebbe essere troppo grande o non supportato.");
   }
 }
+
+/**
+ * Invia il transcript di YouTube a Gemini per generare il riassunto
+ */
+export async function summarizeYoutubeText(transcript: string): Promise<string> {
+  const prompt = `
+Sei un assistente esperto e versatile. Leggi attentamente questa trascrizione di un video YouTube (può essere una riunione, una lezione, un'intervista o un video qualsiasi) e fornisci un report professionale in italiano.
+
+NON rifiutarti mai di riassumere il testo. Se è una lezione, estrai formule, procedure e concetti. 
+
+Il tuo output deve essere formattato rigorosamente in **Markdown** e includere ESATTAMENTE queste sezioni, indipendentemente dal tipo di trascrizione:
+
+# 📝 Riassunto
+(Un paragrafo chiaro e conciso o una sintesi di massimo 4 frasi che catturi l'essenza della discussione o della lezione)
+
+# 🎯 Punti Chiave
+(Un elenco puntato con i 3-5 argomenti principali discussi o insegnati)
+* ...
+* ...
+
+# 🚀 Action Items / Da Ricordare
+(Un elenco di azioni da fare se è una riunione, oppure regole/formule/appunti critici se è una lezione. Usa sempre le checkbox markdown - [ ] )
+- [ ] ...
+- [ ] ...
+
+Ecco la trascrizione del video:
+${transcript}
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ]
+    });
+    
+    return response.text || "Nessun testo generato. Si prega di riprovare.";
+  } catch (error) {
+    console.error("Errore durante la generazione del riassunto YouTube:", error);
+    throw new Error("Errore durante l'analisi della trascrizione di YouTube.");
+  }
+}

@@ -1,5 +1,5 @@
 {
   "name": "Smart Summarizer",
-  "description": "description",
+  "description": "Un tool IA per riassumere riunioni, lezioni video e interviste, estraendo punti formula, concetti chiave e action items.",
   "requestFramePermissions": []
 }

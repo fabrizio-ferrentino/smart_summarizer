@@ -48,24 +48,48 @@ export default function App() {
   };
 
   const handleProcess = async () => {
-    if (activeTab === 'youtube') {
-      setError("L'elaborazione diretta da YouTube richiede un server backend per lo scraping e non è supportata in questa demo frontend. Per favore, scarica l'audio e usa la scheda 'Carica Audio'.");
-      return;
-    }
-
-    if (!file) {
-      setError("Per favore seleziona un file prima di procedere.");
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
 
     try {
-      const result = await summarizeMeeting(file);
-      setSummary(result);
+      if (activeTab === 'youtube') {
+        if (!url) {
+          setError("Per favore inserisci un URL di YouTube valido.");
+          setIsProcessing(false);
+          return;
+        }
+
+        // Fetch transcript from backend
+        const response = await fetch('/api/youtube', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || "Errore nel recupero della trascrizione dal server.");
+        }
+
+        const data = await response.json();
+        
+        // Pass to specialized function that handles text, not file
+        const { summarizeYoutubeText } = await import('./lib/gemini');
+        const result = await summarizeYoutubeText(data.text);
+        setSummary(result);
+        
+      } else {
+        if (!file) {
+          setError("Per favore seleziona un file prima di procedere.");
+          setIsProcessing(false);
+          return;
+        }
+
+        const result = await summarizeMeeting(file);
+        setSummary(result);
+      }
     } catch (err: any) {
-      setError(err.message || "Si è verificato un errore durante l'elaborazione del file.");
+      setError(err.message || "Si è verificato un errore durante l'elaborazione.");
       console.error(err);
     } finally {
       setIsProcessing(false);
@@ -227,10 +251,10 @@ export default function App() {
                         placeholder="https://www.youtube.com/watch?v=..."
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder:text-slate-600 transition-shadow"
                       />
-                      <div className="mt-4 flex items-start gap-2 p-3 bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-lg text-sm">
-                        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <div className="mt-4 flex items-start gap-2 p-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm">
+                        <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
                         <p>
-                          <strong>Nota per la demo:</strong> Il supporto YouTube richiede un backend (es. yt-dlp) per estrarre l'audio a causa delle policy CORS. Cliccare su 'Genera Riassunto' mostrerà un errore programmatico.
+                          Per avere prodotto più accurato ti consiglio di caricare il Video/Audio personalmente
                         </p>
                       </div>
                     </div>
