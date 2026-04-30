@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FileAudio, UploadCloud, Link as LinkIcon, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle } from 'lucide-react';
+import { FileAudio, UploadCloud, Link as LinkIcon, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { summarizeMeeting } from './lib/gemini';
 import { cn } from './lib/utils';
@@ -111,8 +111,8 @@ export default function App() {
       {/* Header - Hidden on Print */}
       <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 no-print flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-3 text-indigo-500">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white"><FileAudio className="w-5 h-5" /></div>
-          <h1 className="text-xl font-semibold tracking-tight text-white italic">Smart Summarizer Pro</h1>
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white"><Sparkles className="w-5 h-5" /></div>
+          <h1 className="text-xl font-semibold tracking-tight text-white italic">Smart Summarizer</h1>
         </div>
         <div className="flex items-center gap-6 text-sm font-medium text-slate-400">
           <div className="text-white border-b-2 border-indigo-500 pb-1 pt-1">Portfolio Project</div>
@@ -132,10 +132,10 @@ export default function App() {
             >
               <div className="text-center mb-10 mt-8">
                 <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">
-                  Trasforma le tue riunioni in <span className="text-indigo-400">Action Items</span>
+                  Trasforma i tuoi audio e video in <span className="text-indigo-400">Riassunti Strutturati</span>
                 </h2>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                  Carica un file audio o video. La nostra IA ascolterà, strutturerà e preparerà i punti chiave da condividere con il tuo team.
+                  Carica la registrazione di una riunione, una lezione o un'intervista. L'IA la ascolterà, estrarrà i concetti chiave e preparerà appunti facili da condividere o studiare.
                 </p>
               </div>
 
@@ -327,7 +327,7 @@ export default function App() {
       <div className="hidden print-only p-8 max-w-4xl mx-auto bg-white min-h-screen">
         <div className="mb-8 pb-4 border-b-2 border-gray-200">
           <div className="flex items-center gap-2 text-indigo-600 mb-2">
-            <FileAudio className="w-6 h-6" />
+            <Sparkles className="w-6 h-6" />
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Smart Summarizer Pro</h1>
           </div>
           <p className="text-gray-500">Report generato automaticamente il {new Date().toLocaleDateString('it-IT')}</p>
