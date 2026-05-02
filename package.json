@@ -12,6 +12,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
     "@google/genai": "^1.50.1",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
@@ -26,6 +27,7 @@
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.5.0",
     "vite": "^6.2.3",
+    "youtube-caption-extractor": "^1.9.1",
     "youtube-transcript": "^1.3.1"
   },
   "devDependencies": {

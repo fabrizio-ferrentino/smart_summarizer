@@ -70,42 +70,46 @@ Se il file è molto corto o silenzioso, spiegalo gentilmente ma mantieni la stru
 }
 
 /**
- * Invia il transcript di YouTube a Gemini per generare il riassunto
+ * Invia il testo di YouTube a Gemini per generare il riassunto
  */
-export async function summarizeYoutubeText(transcript: string): Promise<string> {
+export async function summarizeYoutubeText(transcript: string, url?: string): Promise<string> {
   const prompt = `
-Sei un assistente esperto e versatile. Leggi attentamente questa trascrizione di un video YouTube (può essere una riunione, una lezione, un'intervista o un video qualsiasi) e fornisci un report professionale in italiano.
+Sei un assistente esperto e versatile. Leggi attentamente il seguente contenuto estratto da un video YouTube (che può essere la trascrizione completa, oppure solo titolo e descrizione se i sottotitoli non erano disponibili) e fornisci un report professionale in italiano.
 
 NON rifiutarti mai di riassumere il testo. Se è una lezione, estrai formule, procedure e concetti. 
+Se il testo fornisce solo titolo e descrizione, usa gli strumenti di ricerca \`googleSearch\` per trovare maggiori informazioni sul video o sull'argomento, se possibile.
 
-Il tuo output deve essere formattato rigorosamente in **Markdown** e includere ESATTAMENTE queste sezioni, indipendentemente dal tipo di trascrizione:
+Il tuo output deve essere formattato rigorosamente in **Markdown** e includere ESATTAMENTE queste sezioni, indipendentemente dal tipo di contenuto:
 
 # 📝 Riassunto
 (Un paragrafo chiaro e conciso o una sintesi di massimo 4 frasi che catturi l'essenza della discussione o della lezione)
 
 # 🎯 Punti Chiave
-(Un elenco puntato con i 3-5 argomenti principali discussi o insegnati)
+(Un elenco puntato con i 3-5 argomenti principali discussi o insegnati. Se hai solo titolo e descrizione e hai trovato altro online, aggiungilo qui)
 * ...
 * ...
 
 # 🚀 Action Items / Da Ricordare
-(Un elenco di azioni da fare se è una riunione, oppure regole/formule/appunti critici se è una lezione. Usa sempre le checkbox markdown - [ ] )
-- [ ] ...
-- [ ] ...
+(Un elenco di azioni da fare se è una riunione, oppure regole/formule/appunti critici se è una lezione. Usa sempre le checkbox markdown -  )
+- ...
+- ...
 
-Ecco la trascrizione del video:
+Ecco il contenuto estratto dal video:
 ${transcript}
 `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.1-pro-preview', // Switch to pro to use tools effectively
       contents: [
         {
           role: 'user',
           parts: [{ text: prompt }]
         }
-      ]
+      ],
+      config: {
+        tools: [{ googleSearch: {} }] // Enable Google Search for context
+      }
     });
     
     return response.text || "Nessun testo generato. Si prega di riprovare.";

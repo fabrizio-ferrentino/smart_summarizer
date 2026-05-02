@@ -75,7 +75,7 @@ export default function App() {
         
         // Pass to specialized function that handles text, not file
         const { summarizeYoutubeText } = await import('./lib/gemini');
-        const result = await summarizeYoutubeText(data.text);
+        const result = await summarizeYoutubeText(data.text, url);
         setSummary(result);
         
       } else {
@@ -254,7 +254,7 @@ export default function App() {
                       <div className="mt-4 flex items-start gap-2 p-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm">
                         <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
                         <p>
-                          Per avere prodotto più accurato ti consiglio di caricare il Video/Audio personalmente
+                          Il sistema estrae automaticamente i sottotitoli dal video se disponibili e li analizza in pochi secondi.
                         </p>
                       </div>
                     </div>
