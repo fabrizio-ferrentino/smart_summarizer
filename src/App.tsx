@@ -4,8 +4,6 @@ import ReactMarkdown from 'react-markdown';
 import { summarizeMeeting } from './lib/gemini';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -96,20 +94,18 @@ export default function App() {
     }
   };
 
-  const handleExportPDF = () => {
-    const element = document.getElementById('summary-content-to-print');
-    if (!element) return;
-    
-    // Add a temporary wrapper class if needed, but we capture the element directly.
-    const opt = {
-      margin:       10,
-      filename:     'Riassunto_SmartSum.pdf',
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(element).save();
+  const handleExportPDF = async () => {
+    if (!summary) return;
+    setIsProcessing(true);
+    try {
+      const { generatePDF } = await import('./lib/generatePDF');
+      await generatePDF(summary);
+    } catch (err) {
+      console.error(err);
+      alert("Errore durante l'esportazione del PDF.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleEmailSummary = () => {
@@ -171,7 +167,7 @@ export default function App() {
                   <button 
                     onClick={() => setActiveTab('upload')}
                     className={cn(
-                      "flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors",
+                      "flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer",
                       activeTab === 'upload' 
                         ? "text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50" 
                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
@@ -183,7 +179,7 @@ export default function App() {
                   <button 
                     onClick={() => setActiveTab('youtube')}
                     className={cn(
-                      "flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors",
+                      "flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer",
                       activeTab === 'youtube' 
                         ? "text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50" 
                         : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/30"
@@ -231,7 +227,7 @@ export default function App() {
                           <p className="text-slate-400 text-sm mb-4">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                           <button 
                             onClick={() => setFile(null)}
-                            className="text-sm text-rose-400 hover:text-rose-300 font-medium"
+                            className="text-sm text-rose-400 hover:text-rose-300 font-medium cursor-pointer"
                           >
                             Rimuovi file
                           </button>
@@ -273,12 +269,12 @@ export default function App() {
                     <button
                       onClick={handleProcess}
                       disabled={isProcessing || (activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20"
+                      className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                     >
                       {isProcessing ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Analisi in corso tramite Gemini AI...
+                          Analisi in corso tramite AI...
                         </>
                       ) : (
                         <>
@@ -301,7 +297,7 @@ export default function App() {
               <div className="flex items-center justify-between mb-6">
                 <button 
                   onClick={resetAll}
-                  className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm"
+                  className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Nuova Analisi
@@ -310,14 +306,14 @@ export default function App() {
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={handleEmailSummary}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-all"
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-all cursor-pointer"
                   >
                     <Mail className="w-4 h-4" />
                     Invia Email
                   </button>
                   <button 
                     onClick={handleExportPDF}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20"
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     Esporta PDF
@@ -347,19 +343,6 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Print-only layout (hidden normally) */}
-      <div className="hidden print-only p-8 max-w-4xl mx-auto bg-white min-h-screen">
-        <div className="mb-8 pb-4 border-b-2 border-gray-200">
-          <div className="flex items-center gap-2 text-indigo-600 mb-2">
-            <Sparkles className="w-6 h-6" />
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Smart Summarizer Pro</h1>
-          </div>
-          <p className="text-gray-500">Report generato automaticamente il {new Date().toLocaleDateString('it-IT')}</p>
-        </div>
-        <div className="markdown-body">
-          {summary && <ReactMarkdown>{summary}</ReactMarkdown>}
-        </div>
-      </div>
     </div>
   );
 }
