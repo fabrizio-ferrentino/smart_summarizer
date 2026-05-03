@@ -84,7 +84,7 @@ export const translations = {
       youtubePlaceholder: "https://www.youtube.com/watch?v=...",
       youtubeHint: "Per un risultato più accurato, si consiglia di utilizzare la scheda \"Carica audio/video\".",
       buttonProcess: "Genera Riassunto Strutturato",
-      buttonProcessing: "Analisi in corso tramite Gemini AI...",
+      buttonProcessing: "Analisi in corso tramite AI...",
       errorSize: "Il file è troppo grande. Il limite massimo è 19MB per questa demo.",
       errorType: "Per favore seleziona un file audio o video valido.",
       errorYoutubeEmpty: "Per favore inserisci un URL di YouTube valido.",
