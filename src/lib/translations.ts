@@ -3,7 +3,7 @@ export const translations = {
     about: {
       title: "About Smart Summarizer",
       p1: "Smart Summarizer is a small project created to experiment with and explore the potential of Artificial Intelligence applied to the analysis of audio and video content.",
-      p2: "The site allows you to upload recordings of your meetings, lessons, or interviews, or to paste a YouTube link. Thanks to the integration with Google's AI models, the system transcribes (when necessary) and summarizes the content in a structured way, making it easier to understand and share information.",
+      p2: "The site allows you to upload recordings of your meetings, lessons, or interviews, or to paste a YouTube link. Thanks to the integration with AI models, the system transcribes (when necessary) and summarizes the content in a structured way, making it easier to understand and share information.",
       p3: "This project was created purely for educational purposes and is constantly evolving."
     },
     app: {
@@ -65,7 +65,7 @@ export const translations = {
     about: {
       title: "Informazioni su Smart Summarizer",
       p1: "Smart Summarizer è un piccolo progetto nato con l'obiettivo di sperimentare e approfondire le potenzialità dell'Intelligenza Artificiale applicata all'analisi di contenuti audio e video.",
-      p2: "Il sito consente di caricare le registrazioni delle proprie riunioni, lezioni o interviste oppure di incollare un link YouTube. Grazie all'integrazione con i modelli di IA di Google, il sistema trascrive (quando necessario) e riassume i contenuti in modo strutturato, facilitando la comprensione e la condivisione delle informazioni.",
+      p2: "Il sito consente di caricare le registrazioni delle proprie riunioni, lezioni o interviste oppure di incollare un link YouTube. Grazie all'integrazione con i modelli di IA, il sistema trascrive (quando necessario) e riassume i contenuti in modo strutturato, facilitando la comprensione e la condivisione delle informazioni.",
       p3: "Questo progetto è stato creato a scopo puramente didattico ed è in continua evoluzione."
     },
     app: {
@@ -83,7 +83,7 @@ export const translations = {
       youtubePlaceholder: "https://www.youtube.com/watch?v=...",
       youtubeHint: "Per un risultato più accurato, si consiglia di utilizzare la scheda \"Carica audio/video\".",
       buttonProcess: "Genera Riassunto Strutturato",
-      buttonProcessing: "Analisi in corso tramite AI...",
+      buttonProcessing: "Analisi in corso tramite Gemini AI...",
       errorSize: "Il file è troppo grande. Il limite massimo è 19MB per questa demo.",
       errorType: "Per favore seleziona un file audio o video valido.",
       errorYoutubeEmpty: "Per favore inserisci un URL di YouTube valido.",
