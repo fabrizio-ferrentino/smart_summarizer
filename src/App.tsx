@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { FileAudio, UploadCloud, Link as LinkIcon, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles } from 'lucide-react';
+import { FileAudio, UploadCloud, Github, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { summarizeMeeting } from './lib/gemini';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import About from './components/About';
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -11,7 +12,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'upload' | 'youtube'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'about'>('upload');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,7 +115,7 @@ export default function App() {
     const body = encodeURIComponent(
       "Ecco il riassunto generato automaticamente:\n\n" + 
       summary + 
-      "\n\nGenerato con Smart Summarizer Pro."
+      "\n\nGenerato con Smart Summarizer."
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -130,19 +131,36 @@ export default function App() {
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans">
       {/* Header - Hidden on Print */}
       <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 no-print flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3 text-indigo-500">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white"><Sparkles className="w-5 h-5" /></div>
-          <h1 className="text-xl font-semibold tracking-tight text-white italic">Smart Summarizer</h1>
+        <div className="flex items-center gap-6">
+          <a href="https://github.com/fabrizio-ferrentino/smart_summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+            <Github className="w-5 h-5" />
+          </a>
+          <div className="flex items-center gap-3 text-indigo-500 cursor-pointer" onClick={() => setActiveTab('upload')}>
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white"><Sparkles className="w-5 h-5" /></div>
+            <h1 className="text-xl font-semibold tracking-tight text-white italic">
+              Smart Summarizer
+              <a href="https://fabrizioferrentino.vercel.app" target="_blank" className="text-xs text-indigo-400 ml-2 hover:underline block md:inline">by Fabrizio Ferrentino</a>
+            </h1>
+          </div>
         </div>
-        <div className="flex items-center gap-6 text-sm font-medium text-slate-400">
-          <div className="text-white border-b-2 border-indigo-500 pb-1 pt-1">Portfolio Project</div>
-        </div>
+        <nav className="flex items-center gap-6 text-sm font-medium text-slate-400">
+          <button onClick={() => setActiveTab('about')} className={cn("hover:text-white transition-colors cursor-pointer", activeTab === 'about' ? "text-white" : "text-slate-400")}>About</button>
+        </nav>
       </header>
 
       <main className="flex-1 w-full max-w-4xl mx-auto p-6 md:p-10 flex flex-col no-print">
         
         <AnimatePresence mode="wait">
-          {!summary ? (
+          {activeTab === 'about' ? (
+            <motion.div
+              key="about"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <About />
+            </motion.div>
+          ) : !summary ? (
             <motion.div
               key="upload"
               initial={{ opacity: 0, y: 10 }}
@@ -330,7 +348,7 @@ export default function App() {
                   <div>
                     <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-xs hidden">Report della Riunione</h2>
                     <h2 className="text-2xl font-bold text-white">Report della Riunione</h2>
-                    <p className="text-sm text-slate-400 mt-1">Generato da Smart Summarizer Pro</p>
+                    <p className="text-sm text-slate-400 mt-1">Generato da Smart Summarizer</p>
                   </div>
                 </div>
 
