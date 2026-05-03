@@ -61,8 +61,11 @@ ${t.short_audio}
     });
     
     return response.text || t.no_text;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Errore durante la generazione del riassunto:", error);
+    if (error?.status === 429 || error?.message?.toLowerCase().includes('quota') || error?.message?.includes('429')) {
+      throw new Error(translations[lang].app.errorQuota);
+    }
     throw new Error(t.error_file);
   }
 }
@@ -107,8 +110,11 @@ ${transcript}
     });
     
     return response.text || t.no_text;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Errore durante la generazione del riassunto YouTube:", error);
+    if (error?.status === 429 || error?.message?.toLowerCase().includes('quota') || error?.message?.includes('429')) {
+      throw new Error(translations[lang].app.errorQuota);
+    }
     throw new Error(t.error_youtube);
   }
 }
