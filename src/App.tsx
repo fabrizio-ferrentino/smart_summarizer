@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileAudio, UploadCloud, Github, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, Globe, ChevronDown, Check } from 'lucide-react';
+import { FileAudio, UploadCloud, Github, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { summarizeMeeting } from './lib/gemini';
 import { cn } from './lib/utils';
@@ -32,7 +32,7 @@ const LanguageSelector = ({ current, onChange }: { current: Language; onChange: 
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white rounded-md pl-3 pr-2.5 py-1.5 outline-none text-xs transition-colors cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
       >
-        <Globe className="w-3.5 h-3.5 text-indigo-400" />
+        <Languages className="w-3.5 h-3.5 text-indigo-400" />
         <span className="font-medium">{languages.find(l => l.code === current)?.label}</span>
         <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")} />
       </button>
