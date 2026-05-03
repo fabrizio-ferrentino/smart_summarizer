@@ -201,19 +201,27 @@ export default function App() {
       {/* Header - Hidden on Print */}
       <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 no-print flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-6">
-          <a href="https://github.com/fabrizioferrentino/smart-summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+          <a href="https://github.com/fabrizio-ferrentino/smart_summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
             <Github className="w-5 h-5" />
           </a>
           <div className="flex items-center gap-3 text-indigo-500 cursor-pointer" onClick={() => setActiveTab('upload')}>
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white"><Sparkles className="w-5 h-5" /></div>
+            <img src="/favicon.svg" alt="Smart Summarizer Logo" className="w-8 h-8 rounded-lg shadow-sm" />
             <h1 className="text-xl font-semibold tracking-tight text-white italic">
               Smart Summarizer
               <a href="https://fabrizioferrentino.vercel.app" target="_blank" className="text-xs text-indigo-400 ml-2 hover:underline block md:inline">by Fabrizio Ferrentino</a>
             </h1>
           </div>
         </div>
-        <nav className="flex items-center gap-6 text-sm font-medium text-slate-400">
+
+        {/* Centered Selectors */}
+        <div className="hidden md:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
           <LanguageSelector current={lang} onChange={setLang} />
+        </div>
+
+        <nav className="flex items-center gap-4 text-sm font-medium text-slate-400">
+          <div className="flex md:hidden items-center gap-2">
+            <LanguageSelector current={lang} onChange={setLang} />
+          </div>
           <button onClick={() => setActiveTab('about')} className={cn("hover:text-white transition-colors cursor-pointer", activeTab === 'about' ? "text-white" : "text-slate-400")}>{t.aboutTab}</button>
         </nav>
       </header>
@@ -228,7 +236,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <About lang={lang} />
+              <About lang={lang} onBack={() => setActiveTab('upload')} />
             </motion.div>
           ) : !summary ? (
             <motion.div
