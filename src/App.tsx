@@ -1,10 +1,77 @@
-import React, { useState, useRef } from 'react';
-import { FileAudio, UploadCloud, Github, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { FileAudio, UploadCloud, Github, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, Globe, ChevronDown, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { summarizeMeeting } from './lib/gemini';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import About from './components/About';
+import { translations, Language } from './lib/translations';
+
+const LanguageSelector = ({ current, onChange }: { current: Language; onChange: (l: Language) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const languages: { code: Language; label: string }[] = [
+    { code: 'en', label: 'English' },
+    { code: 'it', label: 'Italiano' }
+  ];
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white rounded-md pl-3 pr-2.5 py-1.5 outline-none text-xs transition-colors cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
+      >
+        <Globe className="w-3.5 h-3.5 text-indigo-400" />
+        <span className="font-medium">{languages.find(l => l.code === current)?.label}</span>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute right-0 mt-2 w-36 bg-slate-800 border border-slate-700 rounded-lg shadow-xl shadow-black/40 overflow-hidden z-20 overflow-y-auto"
+          >
+            <div className="p-1">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    onChange(lang.code);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 text-xs rounded-md transition-colors text-left",
+                    current === lang.code 
+                      ? "bg-indigo-600/20 text-indigo-400" 
+                      : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                  )}
+                >
+                  {lang.label}
+                  {current === lang.code && <Check className="w-3 h-3" />}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,8 +80,10 @@ export default function App() {
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'about'>('upload');
+  const [lang, setLang] = useState<Language>('en');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = translations[lang].app;
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -33,13 +102,13 @@ export default function App() {
     // Check file size (limit to 19 MB per API constraints for inline base64)
     const MAX_SIZE = 19 * 1024 * 1024;
     if (selectedFile.size > MAX_SIZE) {
-      setError(`Il file è troppo grande (${(selectedFile.size / 1024 / 1024).toFixed(1)}MB). Il limite massimo è 19MB per questa demo.`);
+      setError(t.errorSize);
       return;
     }
     
     // Check if it's audio or video
     if (!selectedFile.type.startsWith('audio/') && !selectedFile.type.startsWith('video/')) {
-      setError("Per favore seleziona un file audio o video valido.");
+      setError(t.errorType);
       return;
     }
     
@@ -53,7 +122,7 @@ export default function App() {
     try {
       if (activeTab === 'youtube') {
         if (!url) {
-          setError("Per favore inserisci un URL di YouTube valido.");
+          setError(t.errorYoutubeEmpty);
           setIsProcessing(false);
           return;
         }
@@ -67,28 +136,28 @@ export default function App() {
 
         if (!response.ok) {
           const errData = await response.json();
-          throw new Error(errData.error || "Errore nel recupero della trascrizione dal server.");
+          throw new Error(errData.error || t.errorYoutubeFetch);
         }
 
         const data = await response.json();
         
         // Pass to specialized function that handles text, not file
         const { summarizeYoutubeText } = await import('./lib/gemini');
-        const result = await summarizeYoutubeText(data.text, url);
+        const result = await summarizeYoutubeText(data.text, url, lang);
         setSummary(result);
         
       } else {
         if (!file) {
-          setError("Per favore seleziona un file prima di procedere.");
+          setError(t.errorFileEmpty);
           setIsProcessing(false);
           return;
         }
 
-        const result = await summarizeMeeting(file);
+        const result = await summarizeMeeting(file, lang);
         setSummary(result);
       }
     } catch (err: any) {
-      setError(err.message || "Si è verificato un errore durante l'elaborazione.");
+      setError(err.message || t.errorProcess);
       console.error(err);
     } finally {
       setIsProcessing(false);
@@ -100,10 +169,10 @@ export default function App() {
     setIsProcessing(true);
     try {
       const { generatePDF } = await import('./lib/generatePDF');
-      await generatePDF(summary);
+      await generatePDF(summary, lang);
     } catch (err) {
       console.error(err);
-      alert("Errore durante l'esportazione del PDF.");
+      alert(t.errorPDF);
     } finally {
       setIsProcessing(false);
     }
@@ -111,11 +180,11 @@ export default function App() {
 
   const handleEmailSummary = () => {
     if (!summary) return;
-    const subject = encodeURIComponent("Riassunto della Riunione & Action Items");
+    const subject = encodeURIComponent(t.emailSubject);
     const body = encodeURIComponent(
-      "Ecco il riassunto generato automaticamente:\n\n" + 
+      t.emailBody1 + 
       summary + 
-      "\n\nGenerato con Smart Summarizer."
+      t.emailBody2
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -132,7 +201,7 @@ export default function App() {
       {/* Header - Hidden on Print */}
       <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 no-print flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-6">
-          <a href="https://github.com/fabrizio-ferrentino/smart_summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
+          <a href="https://github.com/fabrizioferrentino/smart-summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
             <Github className="w-5 h-5" />
           </a>
           <div className="flex items-center gap-3 text-indigo-500 cursor-pointer" onClick={() => setActiveTab('upload')}>
@@ -144,7 +213,8 @@ export default function App() {
           </div>
         </div>
         <nav className="flex items-center gap-6 text-sm font-medium text-slate-400">
-          <button onClick={() => setActiveTab('about')} className={cn("hover:text-white transition-colors cursor-pointer", activeTab === 'about' ? "text-white" : "text-slate-400")}>About</button>
+          <LanguageSelector current={lang} onChange={setLang} />
+          <button onClick={() => setActiveTab('about')} className={cn("hover:text-white transition-colors cursor-pointer", activeTab === 'about' ? "text-white" : "text-slate-400")}>{t.aboutTab}</button>
         </nav>
       </header>
 
@@ -158,7 +228,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <About />
+              <About lang={lang} />
             </motion.div>
           ) : !summary ? (
             <motion.div
@@ -170,10 +240,10 @@ export default function App() {
             >
               <div className="text-center mb-10 mt-8">
                 <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">
-                  Trasforma i tuoi audio e video in <span className="text-indigo-400">Riassunti Strutturati</span>
+                  {t.heroTitle}<span className="text-indigo-400">{t.heroHighlight}</span>
                 </h2>
                 <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-                  Carica la registrazione di una riunione, una lezione o un'intervista. L'IA la ascolterà, estrarrà i concetti chiave e preparerà appunti facili da condividere o studiare.
+                  {t.heroDesc}
                 </p>
               </div>
 
@@ -192,7 +262,7 @@ export default function App() {
                     )}
                   >
                     <UploadCloud className="w-4 h-4" />
-                    Carica Audio / Video
+                    {t.tabUpload}
                   </button>
                   <button 
                     onClick={() => setActiveTab('youtube')}
@@ -204,7 +274,7 @@ export default function App() {
                     )}
                   >
                     <LinkIcon className="w-4 h-4" />
-                    Link YouTube
+                    {t.tabYoutube}
                   </button>
                 </div>
 
@@ -222,8 +292,8 @@ export default function App() {
                           <div className="text-indigo-400 mb-4">
                             <UploadCloud className="w-8 h-8 group-hover:text-indigo-300 transition-colors" />
                           </div>
-                          <p className="text-slate-300 font-medium text-lg mb-1 group-hover:text-white transition-colors">Clicca per caricare o trascina il file</p>
-                          <p className="text-slate-500 text-sm mb-4">MP3, WAV, MP4, WEBM (Max 19MB)</p>
+                          <p className="text-slate-300 font-medium text-lg mb-1 group-hover:text-white transition-colors">{t.uploadTitle}</p>
+                          <p className="text-slate-500 text-sm mb-4">{t.uploadLimits}</p>
                           <input 
                             type="file" 
                             className="hidden" 
@@ -247,7 +317,7 @@ export default function App() {
                             onClick={() => setFile(null)}
                             className="text-sm text-rose-400 hover:text-rose-300 font-medium cursor-pointer"
                           >
-                            Rimuovi file
+                            {t.removeFile}
                           </button>
                         </div>
                       )}
@@ -257,18 +327,18 @@ export default function App() {
                   {/* YouTube UI */}
                   {activeTab === 'youtube' && (
                     <div className="flex flex-col">
-                      <label className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 block">Incolla URL YouTube</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 block">{t.youtubeLabel}</label>
                       <input 
                         type="text" 
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
+                        placeholder={t.youtubePlaceholder}
                         className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder:text-slate-600 transition-shadow"
                       />
                       <div className="mt-4 flex items-start gap-2 p-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm">
                         <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
                         <p>
-                          Il sistema estrae automaticamente i sottotitoli dal video se disponibili e li analizza in pochi secondi.
+                          {t.youtubeHint}
                         </p>
                       </div>
                     </div>
@@ -292,11 +362,11 @@ export default function App() {
                       {isProcessing ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          Analisi in corso tramite AI...
+                          {t.buttonProcessing}
                         </>
                       ) : (
                         <>
-                          Genera Riassunto Strutturato
+                          {t.buttonProcess}
                         </>
                       )}
                     </button>
@@ -318,7 +388,7 @@ export default function App() {
                   className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Nuova Analisi
+                  {t.btnNewAnalysis}
                 </button>
                 
                 <div className="flex items-center gap-3">
@@ -327,14 +397,14 @@ export default function App() {
                     className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-all cursor-pointer"
                   >
                     <Mail className="w-4 h-4" />
-                    Invia Email
+                    {t.btnEmail}
                   </button>
                   <button 
                     onClick={handleExportPDF}
                     className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
-                    Esporta PDF
+                    {t.btnExportPDF}
                   </button>
                 </div>
               </div>
@@ -346,9 +416,9 @@ export default function App() {
                     <FileText className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-xs hidden">Report della Riunione</h2>
-                    <h2 className="text-2xl font-bold text-white">Report della Riunione</h2>
-                    <p className="text-sm text-slate-400 mt-1">Generato da Smart Summarizer</p>
+                    <h2 className="text-2xl font-bold text-white uppercase tracking-wider text-xs hidden">{t.reportTitle}</h2>
+                    <h2 className="text-2xl font-bold text-white">{t.reportTitle}</h2>
+                    <p className="text-sm text-slate-400 mt-1">{t.reportGenerated}</p>
                   </div>
                 </div>
 

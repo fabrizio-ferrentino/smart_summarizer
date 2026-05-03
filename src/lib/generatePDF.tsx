@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import React from 'react';
+import { translations, Language } from './translations';
 
 const styles = StyleSheet.create({
   page: { padding: 50, backgroundColor: '#ffffff' },
@@ -27,12 +28,12 @@ const InlineText = ({ text, style }: { text: string; style: any }) => {
   );
 };
 
-const PDFDocument = ({ lines }: { lines: { type: string; content: string }[] }) => (
+const PDFDocument = ({ lines, t }: { lines: { type: string; content: string }[], t: any }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <Text style={styles.header}>Report della Riunione</Text>
+      <Text style={styles.header}>{t.title}</Text>
       <Text style={styles.subheader}>
-        Generato da Smart Summarizer — {new Date().toLocaleDateString('it-IT')}
+        {t.generatedBy} — {new Date().toLocaleDateString()}
       </Text>
       <View style={styles.divider} />
 
@@ -73,9 +74,10 @@ function parseMarkdown(markdown: string) {
   return result;
 }
 
-export async function generatePDF(markdownText: string) {
+export async function generatePDF(markdownText: string, lang: Language = 'en') {
   const lines = parseMarkdown(markdownText);
-  const blob = await pdf(<PDFDocument lines={lines} />).toBlob();
+  const t = translations[lang].pdf;
+  const blob = await pdf(<PDFDocument lines={lines} t={t} />).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

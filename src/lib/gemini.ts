@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { translations, Language } from './translations';
 
 // Inizializza il client Gemini utilizzando la chiave API dall'ambiente
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -26,28 +27,25 @@ export async function fileToGenerativePart(file: File): Promise<{ inlineData: { 
 /**
  * Invia l'audio a Gemini per generare il riassunto
  */
-export async function summarizeMeeting(file: File): Promise<string> {
+export async function summarizeMeeting(file: File, lang: Language = 'en'): Promise<string> {
+  const t = translations[lang].prompt;
   const prompt = `
-Sei un assistente esperto e versatile. Ascolta attentamente questa registrazione (può essere una riunione, una lezione, un'intervista o un video qualsiasi) e fornisci un report professionale in italiano.
+${t.introFile}
 
-NON rifiutarti mai di riassumere l'audio. Se è una lezione, usala come se fosse la riunione da analizzare, estraendo formule, procedure e concetti. 
+${t.rule}
 
-Il tuo output deve essere formattato rigorosamente in **Markdown** e includere ESATTAMENTE queste sezioni, indipendentemente dal tipo di audio:
+${t.formatInfo}
 
-# 📝 Riassunto
-(Un paragrafo chiaro e conciso o una sintesi di massimo 4 frasi che catturi l'essenza della discussione o della lezione)
+${t.h1_summary}
+${t.h1_summary_desc}
 
-# 🎯 Punti Chiave
-(Un elenco puntato con i 3-5 argomenti principali discussi o insegnati)
-* ...
-* ...
+${t.h1_points}
+${t.h1_points_desc}
 
-# 🚀 Action Items / Da Ricordare
-(Un elenco di azioni da fare se è una riunione, oppure regole/formule/appunti critici se è una lezione. Usa sempre le checkbox markdown - )
-- ...
-- ...
+${t.h1_action}
+${t.h1_action_desc}
 
-Se il file è molto corto o silenzioso, spiegalo gentilmente ma mantieni la struttura.
+${t.short_audio}
 `;
 
   try {
@@ -62,39 +60,35 @@ Se il file è molto corto o silenzioso, spiegalo gentilmente ma mantieni la stru
       ]
     });
     
-    return response.text || "Nessun testo generato. Si prega di riprovare.";
+    return response.text || t.no_text;
   } catch (error) {
     console.error("Errore durante la generazione del riassunto:", error);
-    throw new Error("Errore durante l'analisi del file. Potrebbe essere troppo grande o non supportato.");
+    throw new Error(t.error_file);
   }
 }
 
 /**
  * Invia il testo di YouTube a Gemini per generare il riassunto
  */
-export async function summarizeYoutubeText(transcript: string, url?: string): Promise<string> {
+export async function summarizeYoutubeText(transcript: string, url?: string, lang: Language = 'en'): Promise<string> {
+  const t = translations[lang].prompt;
   const prompt = `
-Sei un assistente esperto e versatile. Leggi attentamente il seguente contenuto estratto da un video YouTube (che può essere la trascrizione completa, oppure solo titolo e descrizione se i sottotitoli non erano disponibili) e fornisci un report professionale in italiano.
+${t.introYoutube}
 
-NON rifiutarti mai di riassumere il testo. Se è una lezione, estrai formule, procedure e concetti. 
-Se il testo fornisce solo titolo e descrizione, usa gli strumenti di ricerca \`googleSearch\` per trovare maggiori informazioni sul video o sull'argomento, se possibile.
+${t.rule}
 
-Il tuo output deve essere formattato rigorosamente in **Markdown** e includere ESATTAMENTE queste sezioni, indipendentemente dal tipo di contenuto:
+${t.formatInfo}
 
-# 📝 Riassunto
-(Un paragrafo chiaro e conciso o una sintesi di massimo 4 frasi che catturi l'essenza della discussione o della lezione)
+${t.h1_summary}
+${t.h1_summary_desc}
 
-# 🎯 Punti Chiave
-(Un elenco puntato con i 3-5 argomenti principali discussi o insegnati. Se hai solo titolo e descrizione e hai trovato altro online, aggiungilo qui)
-* ...
-* ...
+${t.h1_points}
+${t.h1_points_desc}
 
-# 🚀 Action Items / Da Ricordare
-(Un elenco di azioni da fare se è una riunione, oppure regole/formule/appunti critici se è una lezione. Usa sempre le checkbox markdown -  )
-- ...
-- ...
+${t.h1_action}
+${t.h1_action_desc}
 
-Ecco il contenuto estratto dal video:
+${t.youtube_content}
 ${transcript}
 `;
 
@@ -112,9 +106,9 @@ ${transcript}
       }
     });
     
-    return response.text || "Nessun testo generato. Si prega di riprovare.";
+    return response.text || t.no_text;
   } catch (error) {
     console.error("Errore durante la generazione del riassunto YouTube:", error);
-    throw new Error("Errore durante l'analisi della trascrizione di YouTube.");
+    throw new Error(t.error_youtube);
   }
 }
