@@ -199,29 +199,35 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col font-sans">
       {/* Header - Hidden on Print */}
-      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 py-4 px-6 no-print flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-6">
-          <a href="https://github.com/fabrizio-ferrentino/smart_summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer">
-            <Github className="w-5 h-5" />
-          </a>
-          <div className="flex items-center gap-3 text-indigo-500 cursor-pointer" onClick={() => setActiveTab('upload')}>
-            <img src="/favicon.svg" alt="Smart Summarizer Logo" className="w-8 h-8 rounded-lg shadow-sm" />
-            <h1 className="text-xl font-semibold tracking-tight text-white italic">
-              Smart Summarizer
-              <a href="https://fabrizioferrentino.vercel.app" target="_blank" className="text-xs text-indigo-400 ml-2 hover:underline block md:inline">by Fabrizio Ferrentino</a>
-            </h1>
+      <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 p-3 md:py-4 md:px-6 no-print flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 sticky top-0 z-10 shrink-0">
+        <div className="flex items-center justify-between w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a href="https://github.com/fabrizio-ferrentino/smart_summarizer" target="_blank" className="text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0">
+              <Github className="w-5 h-5" />
+            </a>
+            <div className="flex items-center gap-2 text-indigo-500 cursor-pointer" onClick={() => setActiveTab('upload')}>
+              <img src="/favicon.svg" alt="Smart Summarizer Logo" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg shadow-sm shrink-0" />
+              <div className="flex flex-col">
+                <h1 className="text-[14px] sm:text-base md:text-xl font-semibold tracking-tight text-white italic leading-none">
+                  Smart Summarizer
+                </h1>
+                <a href="https://fabrizioferrentino.vercel.app" target="_blank" className="text-[10px] md:text-xs text-indigo-400 hover:underline leading-tight mt-0.5">by Fabrizio Ferrentino</a>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 sm:hidden shrink-0">
+            <LanguageSelector current={lang} onChange={setLang} />
+            <button onClick={() => setActiveTab('about')} className={cn("text-[13px] hover:text-white transition-colors cursor-pointer font-medium", activeTab === 'about' ? "text-white" : "text-slate-400")}>{t.aboutTab}</button>
           </div>
         </div>
 
-        {/* Centered Selectors */}
-        <div className="hidden md:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
+        {/* Centered Selectors on Desktop */}
+        <div className="hidden sm:flex md:absolute md:left-1/2 md:-translate-x-1/2 items-center">
           <LanguageSelector current={lang} onChange={setLang} />
         </div>
 
-        <nav className="flex items-center gap-4 text-sm font-medium text-slate-400">
-          <div className="flex md:hidden items-center gap-2">
-            <LanguageSelector current={lang} onChange={setLang} />
-          </div>
+        <nav className="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-400 shrink-0">
           <button onClick={() => setActiveTab('about')} className={cn("hover:text-white transition-colors cursor-pointer", activeTab === 'about' ? "text-white" : "text-slate-400")}>{t.aboutTab}</button>
         </nav>
       </header>
@@ -390,37 +396,37 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex-1 flex flex-col"
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                 <button 
                   onClick={resetAll}
-                  className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer"
+                  className="w-full sm:w-auto text-slate-400 hover:text-white flex items-center justify-center sm:justify-start gap-2 transition-colors font-medium text-sm cursor-pointer border border-slate-800 sm:border-none py-2 sm:py-0 rounded-lg sm:rounded-none bg-slate-900/50 sm:bg-transparent"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   {t.btnNewAnalysis}
                 </button>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                   <button 
                     onClick={handleEmailSummary}
-                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg text-sm transition-all cursor-pointer"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer"
                   >
-                    <Mail className="w-4 h-4" />
-                    {t.btnEmail}
+                    <Mail className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{t.btnEmail}</span>
                   </button>
                   <button 
                     onClick={handleExportPDF}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    {t.btnExportPDF}
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span className="truncate">{t.btnExportPDF}</span>
                   </button>
                 </div>
               </div>
 
               {/* Summary Document */}
-              <div id="summary-content-to-print" className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 md:p-12 print-clean shadow-xl shadow-black/20">
-                <div className="flex items-center gap-3 mb-8 pb-8 border-b border-slate-800 no-print">
-                  <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl">
+              <div id="summary-content-to-print" className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 md:p-12 print-clean shadow-xl shadow-black/20">
+                <div className="flex items-center gap-3 mb-6 pb-6 md:mb-8 md:pb-8 border-b border-slate-800 no-print">
+                  <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl shrink-0">
                     <FileText className="w-6 h-6" />
                   </div>
                   <div>

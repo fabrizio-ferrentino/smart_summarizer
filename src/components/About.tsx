@@ -15,8 +15,8 @@ export default function About({ lang, onBack }: { lang: Language; onBack: () => 
           {tn.btnHome || "Home"}
         </button>
       </div>
-      <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 shadow-lg shadow-black/20 text-slate-300">
-        <h2 className="text-3xl font-extrabold text-white mb-6">{t.title}</h2>
+      <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 md:p-8 shadow-lg shadow-black/20 text-slate-300">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-4 md:mb-6">{t.title}</h2>
         <p className="mb-4">{t.p1}</p>
         <p className="mb-4">{t.p2}</p>
         <p>{t.p3}</p>
