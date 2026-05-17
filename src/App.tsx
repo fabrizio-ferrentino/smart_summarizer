@@ -77,6 +77,7 @@ export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progressValue, setProgressValue] = useState(0);
   const [summary, setSummary] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'about'>('upload');
@@ -194,6 +195,32 @@ export default function App() {
     setSummary(null);
     setError(null);
     setUrl('');
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isProcessing) {
+      setProgressValue(0);
+      interval = setInterval(() => {
+        setProgressValue(prev => {
+          if (prev >= 95) return 95;
+          const inc = prev < 30 ? Math.random() * 8 + 2 : prev < 70 ? Math.random() * 4 + 1 : Math.random() * 1.5 + 0.1;
+          return Math.min(95, prev + inc);
+        });
+      }, 500);
+    } else {
+      setProgressValue(100);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
+  const getProgressText = () => {
+    if (!isProcessing && progressValue === 100) return t.stepDone || "Completato";
+    if (progressValue < 15) return t.stepInitializing || "Inizializzazione...";
+    if (progressValue < 40) return t.stepExtracting || "Estrazione dati in corso...";
+    if (progressValue < 65) return t.stepProcessing || "Elaborazione contenuti...";
+    if (progressValue < 85) return t.stepAnalyzing || "Analisi con Intelligenza Artificiale...";
+    return t.stepGenerating || "Generazione del riassunto...";
   };
 
   return (
@@ -366,24 +393,36 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* Process Button */}
-                  <div className="mt-8">
-                    <button
-                      onClick={handleProcess}
-                      disabled={isProcessing || (activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url)}
-                      className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          {t.buttonProcessing}
-                        </>
-                      ) : (
-                        <>
-                          {t.buttonProcess}
-                        </>
-                      )}
-                    </button>
+                  {/* Process Button / Progress */}
+                  <div className="mt-8 h-[52px]">
+                    {!isProcessing ? (
+                      <button
+                        onClick={handleProcess}
+                        disabled={(activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url)}
+                        className="w-full h-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
+                      >
+                        <Sparkles className="w-5 h-5" />
+                        {t.buttonProcess}
+                      </button>
+                    ) : (
+                      <div className="w-full h-full bg-indigo-500/10 border border-indigo-500/20 px-4 rounded-lg flex flex-col justify-center relative overflow-hidden">
+                        <div className="flex items-center justify-between text-sm relative z-10 w-full">
+                           <span className="text-indigo-300 font-medium flex items-center gap-2 truncate">
+                             <Loader2 className="w-4 h-4 animate-spin text-indigo-400 shrink-0" />
+                             <span className="truncate">{getProgressText()}</span>
+                           </span>
+                           <span className="text-indigo-400/60 text-xs font-medium ml-2 shrink-0">
+                             {Math.round(progressValue)}%
+                           </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 h-1 bg-slate-900/50 w-full">
+                           <motion.div 
+                             className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)] transition-all duration-500 ease-out"
+                             style={{ width: `${progressValue}%` }}
+                           />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                 </div>
