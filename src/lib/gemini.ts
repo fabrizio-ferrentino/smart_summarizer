@@ -5,6 +5,27 @@ import { translations, Language } from './translations';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 /**
+ * Generate a short title from the summary
+ */
+export async function generateTitle(summary: string, lang: Language = 'en'): Promise<string> {
+  try {
+    const prompt = lang === 'it'
+      ? 'Genera un titolo molto breve (massimo 5-6 parole) che riassuma questo testo. Restituisci SOLO il titolo senza virgolette e nient\'altro:'
+      : 'Generate a very short title (max 5-6 words) that summarizes this text. Return ONLY the title without quotes and nothing else:';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt + '\n\n' + summary.substring(0, 1500) }] }]
+    });
+
+    return response.text?.trim().replace(/^"|"$/g, '') || (lang === 'it' ? 'Riassunto Generato' : 'Generated Summary');
+  } catch (e) {
+    return lang === 'it' ? 'Riassunto Generato' : 'Generated Summary';
+  }
+}
+
+
+/**
  * Converte un file locale in un payload Base64 compatibile con Gemini API
  */
 export async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
@@ -59,7 +80,7 @@ ${t.short_audio}
         }
       ]
     });
-    
+
     return response.text || t.no_text;
   } catch (error: any) {
     console.error("Errore durante la generazione del riassunto:", error);
@@ -108,7 +129,7 @@ ${transcript}
         tools: [{ googleSearch: {} }] // Enable Google Search for context
       }
     });
-    
+
     return response.text || t.no_text;
   } catch (error: any) {
     console.error("Errore durante la generazione del riassunto YouTube:", error);

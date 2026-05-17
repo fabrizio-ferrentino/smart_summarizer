@@ -28,10 +28,10 @@ const InlineText = ({ text, style }: { text: string; style: any }) => {
   );
 };
 
-const PDFDocument = ({ lines, t }: { lines: { type: string; content: string }[], t: any }) => (
+const PDFDocument = ({ lines, t, title }: { lines: { type: string; content: string }[], t: any, title: string }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <Text style={styles.header}>{t.title}</Text>
+      <Text style={styles.header}>{title}</Text>
       <Text style={styles.subheader}>
         {t.generatedBy} — {new Date().toLocaleDateString()}
       </Text>
@@ -74,10 +74,10 @@ function parseMarkdown(markdown: string) {
   return result;
 }
 
-export async function generatePDF(markdownText: string, lang: Language = 'en') {
+export async function generatePDF(markdownText: string, lang: Language = 'en', title: string) {
   const lines = parseMarkdown(markdownText);
   const t = translations[lang].pdf;
-  const blob = await pdf(<PDFDocument lines={lines} t={t} />).toBlob();
+  const blob = await pdf(<PDFDocument lines={lines} t={t} title={title} />).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

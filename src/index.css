@@ -30,6 +30,13 @@
   .markdown-body strong { @apply !text-gray-900; }
 }
 
+.markdown-body {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  width: 100%;
+}
+
 .markdown-body h1 {
   @apply text-xl font-bold text-white mt-6 mb-4;
 }
@@ -39,6 +46,15 @@
 }
 .markdown-body p {
   @apply text-slate-300 leading-relaxed text-sm mb-4;
+}
+.markdown-body code {
+  @apply bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-700;
+}
+.markdown-body pre {
+  @apply bg-slate-900 border border-slate-800 p-4 rounded-lg overflow-x-auto text-slate-300 font-mono text-sm my-4;
+}
+.markdown-body pre code {
+  @apply bg-transparent text-inherit p-0 border-none;
 }
 .markdown-body ul {
   @apply list-none pl-1 text-slate-300 mb-6 space-y-3 text-sm;
@@ -65,4 +81,126 @@
 }
 .markdown-body strong {
   @apply font-semibold text-white;
+}
+
+/* Quill Dark Theme Overrides */
+.quill-dark {
+  @apply flex flex-col w-full max-w-full;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.quill-dark .ql-toolbar.ql-snow {
+  @apply border-slate-700 bg-slate-900/80 rounded-t-lg;
+}
+.quill-dark .ql-container.ql-snow {
+  @apply border-slate-700 bg-slate-950/50 rounded-b-lg text-slate-300 font-sans text-base;
+}
+.quill-dark .ql-editor {
+  @apply min-h-[400px];
+}
+.quill-dark .ql-snow .ql-stroke {
+  @apply stroke-slate-400;
+}
+.quill-dark .ql-snow .ql-fill, .quill-dark .ql-snow .ql-stroke.ql-fill {
+  @apply fill-slate-400;
+}
+.quill-dark .ql-snow .ql-picker {
+  @apply text-slate-400;
+}
+.quill-dark .ql-snow .ql-picker-options {
+  @apply bg-slate-800 border-slate-700 text-slate-300;
+}
+.quill-dark .ql-snow.ql-toolbar button:hover .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar button:hover .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar button:focus .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar button:focus .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar button.ql-active .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label:hover .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label.ql-active .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item:hover .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-stroke,
+.quill-dark .ql-snow.ql-toolbar button:hover .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar button:hover .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar button:focus .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar button:focus .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar button.ql-active .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar button.ql-active .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label:hover .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label.ql-active .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item:hover .ql-stroke-miter,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke-miter,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-stroke-miter {
+  @apply stroke-indigo-400;
+}
+.quill-dark .ql-snow.ql-toolbar button:hover .ql-fill,
+.quill-dark .ql-snow .ql-toolbar button:hover .ql-fill,
+.quill-dark .ql-snow.ql-toolbar button:focus .ql-fill,
+.quill-dark .ql-snow .ql-toolbar button:focus .ql-fill,
+.quill-dark .ql-snow.ql-toolbar button.ql-active .ql-fill,
+.quill-dark .ql-snow .ql-toolbar button.ql-active .ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label:hover .ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label:hover .ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label.ql-active .ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item:hover .ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item:hover .ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-fill,
+.quill-dark .ql-snow.ql-toolbar button:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar button:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar button:focus .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar button:focus .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar button.ql-active .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar button.ql-active .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-label.ql-active .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item:hover .ql-stroke.ql-fill,
+.quill-dark .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke.ql-fill,
+.quill-dark .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-stroke.ql-fill {
+  @apply fill-indigo-400;
+}
+
+.quill-dark .ql-editor h1 {
+  @apply text-xl font-bold text-white content-start mb-4 border-none pb-0;
+}
+.quill-dark .ql-editor h2 {
+  @apply text-indigo-400 text-sm font-bold uppercase tracking-widest mt-6 mb-3 border-none pb-0;
+}
+.quill-dark .ql-editor p {
+  @apply mb-4 text-slate-300;
+}
+.quill-dark .ql-editor ul, .quill-dark .ql-editor ol {
+  @apply mb-4 pl-5 text-slate-300;
+}
+.quill-dark .ql-editor ul {
+  @apply list-disc;
+}
+.quill-dark .ql-editor ol {
+  @apply list-decimal;
+}
+.quill-dark .ql-editor strong {
+  @apply text-white font-bold;
+}
+.quill-dark .ql-editor pre {
+  @apply bg-slate-900 border border-slate-800 p-4 rounded-lg overflow-x-auto text-slate-300 font-mono text-sm my-4;
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border: 1px solid #1e293b !important;
+}
+.quill-dark .ql-editor code {
+  @apply bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-sm font-mono border border-slate-700;
+  background-color: #1e293b !important;
+  color: #a5b4fc !important;
+  border: 1px solid #334155 !important;
 }
