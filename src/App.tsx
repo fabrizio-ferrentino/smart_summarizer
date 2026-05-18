@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock } from 'lucide-react';
+import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { summarizeMeeting, generateTitle } from './lib/gemini';
+import { summarizeMeeting, generateTitle, summarizePastedText } from './lib/gemini';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import About from './components/About';
@@ -78,13 +78,14 @@ const LanguageSelector = ({ current, onChange }: { current: Language; onChange: 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
+  const [pastedText, setPastedText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
   const [reportTitleState, setReportTitleState] = useState<string | null>(null);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'about'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'text' | 'about'>('upload');
   const [lang, setLang] = useState<Language>(() => {
     const savedLang = localStorage.getItem('smart-summarizer-lang');
     return (savedLang === 'en' || savedLang === 'it') ? savedLang : 'en';
@@ -145,7 +146,7 @@ export default function App() {
     try {
       let mdResult: string;
       let sourceName: string;
-      let sourceType: 'file' | 'youtube';
+      let sourceType: 'file' | 'youtube' | 'text';
 
       if (activeTab === 'youtube') {
         if (!url) {
@@ -167,6 +168,15 @@ export default function App() {
         mdResult = await summarizeYoutubeText(data.text, url, lang);
         sourceName = url;
         sourceType = 'youtube';
+      } else if (activeTab === 'text') {
+        if (!pastedText.trim()) {
+          setError(t.errorTextEmpty);
+          setIsProcessing(false);
+          return;
+        }
+        mdResult = await summarizePastedText(pastedText, lang);
+        sourceName = `Text (${new Date().toLocaleDateString()})`;
+        sourceType = 'text';
       } else {
         if (!file) {
           setError(t.errorFileEmpty);
@@ -221,6 +231,7 @@ export default function App() {
     setCurrentHistoryId(null);
     setError(null);
     setUrl('');
+    setPastedText('');
   };
 
   useEffect(() => {
@@ -355,7 +366,7 @@ export default function App() {
 
                   <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden max-w-2xl mx-auto w-full shadow-lg shadow-black/20">
                     <div className="flex border-b border-slate-800">
-                      {(['upload', 'youtube'] as const).map(tab => (
+                      {(['upload', 'youtube', 'text'] as const).map(tab => (
                         <button
                           key={tab}
                           onClick={() => setActiveTab(tab)}
@@ -364,7 +375,7 @@ export default function App() {
                             activeTab === tab ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30',
                           )}
                         >
-                          {tab === 'upload' ? <><UploadCloud className="w-4 h-4" />{t.tabUpload}</> : <><LinkIcon className="w-4 h-4" />{t.tabYoutube}</>}
+                          {tab === 'upload' ? <><UploadCloud className="w-4 h-4" />{t.tabUpload}</> : tab === 'youtube' ? <><LinkIcon className="w-4 h-4" />{t.tabYoutube}</> : <><Type className="w-4 h-4" />{t.tabText}</>}
                         </button>
                       ))}
                     </div>
@@ -406,6 +417,21 @@ export default function App() {
                         </div>
                       )}
 
+                      {activeTab === 'text' && (
+                        <div className="flex flex-col">
+                          <label className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3 block">{t.textLabel}</label>
+                          <textarea 
+                            value={pastedText} 
+                            onChange={e => setPastedText(e.target.value)} 
+                            placeholder={t.textPlaceholder}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 placeholder:text-slate-600 transition-shadow min-h-[160px] resize-y"
+                          />
+                          <div className="mt-4 flex items-start gap-2 p-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg text-sm">
+                            <Type className="w-4 h-4 mt-0.5 shrink-0" /><p>{t.textHint}</p>
+                          </div>
+                        </div>
+                      )}
+
                       {error && (
                         <div className="mt-6 p-4 bg-rose-500/10 text-rose-400 rounded-lg text-sm border border-rose-500/20 flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><p>{error}</p>
@@ -416,7 +442,7 @@ export default function App() {
                         {!isProcessing ? (
                           <button
                             onClick={handleProcess}
-                            disabled={(activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url)}
+                            disabled={(activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url) || (activeTab === 'text' && !pastedText.trim())}
                             className="w-full h-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                           >
                             <Sparkles className="w-5 h-5" />{t.buttonProcess}

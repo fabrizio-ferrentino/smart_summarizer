@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { translations, Language } from '../lib/translations';
 import { SavedSummary } from '../lib/history';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, Trash2, Link, Sparkles, UploadCloud } from 'lucide-react';
+import { Clock, Trash2, Link, Sparkles, UploadCloud, Type } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface HistoryViewProps {
@@ -194,6 +194,8 @@ function HistoryCard({
       )}>
         {item.sourceType === 'youtube'
           ? <Link className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+          : item.sourceType === 'text'
+          ? <Type className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 transition-colors" />
           : <UploadCloud className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400 transition-colors" />
         }
       </div>

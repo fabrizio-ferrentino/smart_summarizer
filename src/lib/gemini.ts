@@ -92,8 +92,51 @@ ${t.short_audio}
 }
 
 /**
- * Invia il testo di YouTube a Gemini per generare il riassunto
+ * Invia testo incollato a Gemini per generare il riassunto
  */
+export async function summarizePastedText(text: string, lang: Language = 'en'): Promise<string> {
+  const t = translations[lang].prompt;
+  const prompt = `
+${t.introText}
+
+${t.rule}
+
+${t.formatInfo}
+
+${t.h1_summary}
+${t.h1_summary_desc}
+
+${t.h1_points}
+${t.h1_points_desc}
+
+${t.h1_action}
+${t.h1_action_desc}
+
+Here is the text to summarize:
+${text}
+`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }]
+        }
+      ]
+    });
+
+    return response.text || t.no_text;
+  } catch (error: any) {
+    console.error("Error during text summary generation:", error);
+    if (error?.status === 429 || error?.message?.toLowerCase().includes('quota') || error?.message?.includes('429')) {
+      throw new Error(translations[lang].app.errorQuota);
+    }
+    throw new Error(t.error_file); // Reusing error_file text or generic error
+  }
+}
+
 export async function summarizeYoutubeText(transcript: string, url?: string, lang: Language = 'en'): Promise<string> {
   const t = translations[lang].prompt;
   const prompt = `

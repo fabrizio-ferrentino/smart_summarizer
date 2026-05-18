@@ -3,7 +3,7 @@ export interface SavedSummary {
   title: string;
   date: number;
   content: string;
-  sourceType: 'file' | 'youtube';
+  sourceType: 'file' | 'youtube' | 'text';
   sourceName: string;
 }
 
