@@ -371,11 +371,13 @@ export default function App() {
                           key={tab}
                           onClick={() => setActiveTab(tab)}
                           className={cn(
-                            'flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer',
+                            'flex-1 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 transition-colors cursor-pointer',
                             activeTab === tab ? 'text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30',
                           )}
                         >
-                          {tab === 'upload' ? <><UploadCloud className="w-4 h-4" />{t.tabUpload}</> : tab === 'youtube' ? <><LinkIcon className="w-4 h-4" />{t.tabYoutube}</> : <><Type className="w-4 h-4" />{t.tabText}</>}
+                          {tab === 'upload' && <><UploadCloud className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" /><span className="text-[10px] sm:text-sm font-medium text-center leading-tight">{t.tabUpload}</span></>}
+                          {tab === 'youtube' && <><LinkIcon className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" /><span className="text-[10px] sm:text-sm font-medium text-center leading-tight">{t.tabYoutube}</span></>}
+                          {tab === 'text' && <><Type className="w-5 h-5 sm:w-4 sm:h-4 shrink-0" /><span className="text-[10px] sm:text-sm font-medium text-center leading-tight">{t.tabText}</span></>}
                         </button>
                       ))}
                     </div>
