@@ -244,7 +244,7 @@ export default function App() {
           const inc = prev < 30 ? Math.random() * 8 + 2 : prev < 70 ? Math.random() * 4 + 1 : Math.random() * 1.5 + 0.1;
           return Math.min(95, prev + inc);
         });
-      });
+      }, 500);
     } else {
       setProgressValue(100);
     }
