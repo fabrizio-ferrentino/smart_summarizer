@@ -4,7 +4,17 @@ import { getVideoDetails } from 'youtube-caption-extractor';
 function extractVideoID(url: string): string | null {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
-  return (match && match[7].length === 11) ? match[7] : null;
+  return match && match[7].length === 11 ? match[7] : null;
+}
+
+// Helper: legge il body raw se req.body non è già parsato
+async function getRawBody(req: VercelRequest): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => (data += chunk));
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,7 +23,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { url } = req.body;
+    // Parsa il body — usa req.body se disponibile, altrimenti leggi raw
+    let body = req.body;
+    if (!body || typeof body === 'string') {
+      const raw = typeof body === 'string' ? body : await getRawBody(req);
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
+
+    const { url } = body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
 
     const videoID = extractVideoID(url);
