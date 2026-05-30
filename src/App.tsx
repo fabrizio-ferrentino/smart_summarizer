@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { summarizeMeeting, generateTitle, summarizePastedText } from './lib/gemini';
+import { summarizeMeeting, generateTitle, summarizePastedText, supportsAudio, activeProviderName } from './lib/providers';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import About from './components/About';
@@ -85,7 +85,7 @@ export default function App() {
   const [reportTitleState, setReportTitleState] = useState<string | null>(null);
   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'text' | 'about'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'youtube' | 'text' | 'about'>(supportsAudio ? 'upload' : 'youtube');
   const [lang, setLang] = useState<Language>(() => {
     const savedLang = localStorage.getItem('smart-summarizer-lang');
     return (savedLang === 'en' || savedLang === 'it') ? savedLang : 'en';
@@ -164,7 +164,7 @@ export default function App() {
           throw new Error(e.error || t.errorYoutubeFetch);
         }
         const data = await response.json();
-        const { summarizeYoutubeText } = await import('./lib/gemini');
+        const { summarizeYoutubeText } = await import('./lib/providers');
         mdResult = await summarizeYoutubeText(data.text, url, lang);
         sourceName = url;
         sourceType = 'youtube';
@@ -290,7 +290,11 @@ export default function App() {
             <button onClick={() => setActiveTab('about')} className={cn('text-[13px] hover:text-white transition-colors cursor-pointer font-medium', activeTab === 'about' ? 'text-white' : 'text-slate-400')}>{t.aboutTab}</button>
           </div>
         </div>
-        <div className="hidden sm:flex md:absolute md:left-1/2 md:-translate-x-1/2 items-center">
+        <div className="hidden sm:flex md:absolute md:left-1/2 md:-translate-x-1/2 items-center gap-3">
+        {/* If you want to see your provider uncommented this */}
+          {/* <span className="text-[11px] font-medium text-slate-500 bg-slate-800 border border-slate-700 rounded-md px-2.5 py-1.5 leading-none">
+            {activeProviderName}
+          </span> */}
           <LanguageSelector current={lang} onChange={setLang} />
         </div>
         <nav className="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-400 shrink-0">
@@ -385,7 +389,14 @@ export default function App() {
                     <div className="p-8">
                       {activeTab === 'upload' && (
                         <div className="flex flex-col items-center">
-                          {!file ? (
+                          {!supportsAudio ? (
+                            <div className="w-full flex flex-col items-center gap-4 py-6">
+                              <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center text-amber-400">
+                                <AlertCircle className="w-6 h-6" />
+                              </div>
+                              <p className="text-slate-400 text-sm text-center leading-relaxed">{t.uploadNotSupported}</p>
+                            </div>
+                          ) : !file ? (
                             <div
                               className="w-full border-2 border-dashed border-slate-800 rounded-lg p-10 flex flex-col items-center justify-center cursor-pointer hover:border-slate-700 transition-colors bg-slate-900/30 group"
                               onDragOver={handleDragOver} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}
@@ -444,7 +455,7 @@ export default function App() {
                         {!isProcessing ? (
                           <button
                             onClick={handleProcess}
-                            disabled={(activeTab === 'upload' && !file) || (activeTab === 'youtube' && !url) || (activeTab === 'text' && !pastedText.trim())}
+                            disabled={(activeTab === 'upload' && (!file || !supportsAudio)) || (activeTab === 'youtube' && !url) || (activeTab === 'text' && !pastedText.trim())}
                             className="w-full h-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-900/20 cursor-pointer"
                           >
                             <Sparkles className="w-5 h-5" />{t.buttonProcess}
