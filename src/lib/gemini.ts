@@ -50,10 +50,8 @@ export async function fileToGenerativePart(file: File): Promise<{ inlineData: { 
  */
 export async function summarizeMeeting(file: File, lang: Language = 'en'): Promise<string> {
   const t = translations[lang].prompt;
-  const prompt = `
+  const userPrompt = `
 ${t.introFile}
-
-${t.rule}
 
 ${t.formatInfo}
 
@@ -73,17 +71,20 @@ ${t.short_audio}
     const part = await fileToGenerativePart(file);
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
+      config: {
+        systemInstruction: t.system
+      },
       contents: [
         {
           role: 'user',
-          parts: [part, { text: prompt }]
+          parts: [part, { text: userPrompt }]
         }
       ]
     });
 
     return response.text || t.no_text;
   } catch (error: any) {
-    console.error("Errore durante la generazione del riassunto:", error);
+    console.error('Errore durante la generazione del riassunto:', error);
     if (error?.status === 429 || error?.message?.toLowerCase().includes('quota') || error?.message?.includes('429')) {
       throw new Error(translations[lang].app.errorQuota);
     }
@@ -96,10 +97,8 @@ ${t.short_audio}
  */
 export async function summarizePastedText(text: string, lang: Language = 'en'): Promise<string> {
   const t = translations[lang].prompt;
-  const prompt = `
+  const userPrompt = `
 ${t.introText}
-
-${t.rule}
 
 ${t.formatInfo}
 
@@ -112,17 +111,20 @@ ${t.h1_points_desc}
 ${t.h1_action}
 ${t.h1_action_desc}
 
-Here is the text to summarize:
+${t.textContent}
 ${text}
 `;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
+      config: {
+        systemInstruction: t.system
+      },
       contents: [
         {
           role: 'user',
-          parts: [{ text: prompt }]
+          parts: [{ text: userPrompt }]
         }
       ]
     });
@@ -139,10 +141,9 @@ ${text}
 
 export async function summarizeYoutubeText(transcript: string, url?: string, lang: Language = 'en'): Promise<string> {
   const t = translations[lang].prompt;
-  const prompt = `
+  const urlLine = url ? `${t.youtubeUrl} ${url}\n` : '';
+  const userPrompt = `
 ${t.introYoutube}
-
-${t.rule}
 
 ${t.formatInfo}
 
@@ -155,22 +156,23 @@ ${t.h1_points_desc}
 ${t.h1_action}
 ${t.h1_action_desc}
 
-${t.youtube_content}
+${urlLine}${t.youtube_content}
 ${transcript}
 `;
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
+      config: {
+        systemInstruction: t.systemYoutube,
+        tools: [{ googleSearch: {} }]
+      },
       contents: [
         {
           role: 'user',
-          parts: [{ text: prompt }]
+          parts: [{ text: userPrompt }]
         }
-      ],
-      config: {
-        tools: [{ googleSearch: {} }] // Enable Google Search for context
-      }
+      ]
     });
 
     return response.text || t.no_text;
