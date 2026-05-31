@@ -49,6 +49,23 @@ const PDFDocument = ({ lines, t, title }: { lines: { type: string; content: stri
   </Document>
 );
 
+/**
+ * Builds a clean filename from the report title.
+ * Normalize accents, use hyphens as separators, append the date.
+ * Ex: "Company Meeting" -> "company-meeting-2026-05-31.pdf"
+ */
+function buildFilename(title: string): string {
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const slug = (title || '')
+    .normalize('NFD')                 // separate letters and accents
+    .replace(/[̀-ͯ]/g, '')   // remove diacritics (à -> a)
+    .replace(/[^a-zA-Z0-9]+/g, '-')    // each group of invalid characters -> a hyphen
+    .replace(/^-+|-+$/g, '')         // remove the hyphens at the beginning and end
+    .toLowerCase()
+    .slice(0, 60);                   // limit the length
+  return `${slug || 'summary'}-${date}.pdf`;
+}
+
 function parseMarkdown(markdown: string) {
   const lines = markdown.split('\n');
   const result: { type: string; content: string }[] = [];
@@ -81,7 +98,7 @@ export async function generatePDF(markdownText: string, lang: Language = 'en', t
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'Riassunto_SmartSum.pdf';
+  a.download = buildFilename(title);
   a.click();
   URL.revokeObjectURL(url);
 }
