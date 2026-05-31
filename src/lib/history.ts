@@ -5,6 +5,7 @@ export interface SavedSummary {
   content: string;
   sourceType: 'file' | 'youtube' | 'text';
   sourceName: string;
+  sourceText?: string;
 }
 
 const STORAGE_KEY = 'smart_summarizer_history';

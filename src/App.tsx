@@ -92,6 +92,8 @@ export default function App() {
   });
   const [historyItems, setHistoryItems] = useState<SavedSummary[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeSource, setActiveSource] = useState<{ type: 'file' | 'youtube' | 'text'; name: string; text?: string } | null>(null);
+  const [showOriginalText, setShowOriginalText] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -194,8 +196,22 @@ export default function App() {
       setMarkdownContent(mdResult);
       setReportTitleState(generatedTitle);
       setCurrentHistoryId(id);
+      setActiveSource({
+        type: sourceType,
+        name: sourceName,
+        text: sourceType === 'text' ? pastedText : undefined,
+      });
+      setShowOriginalText(false);
 
-      saveHistory({ id, title: generatedTitle, date: Date.now(), content: mdResult, sourceType, sourceName });
+      saveHistory({
+        id,
+        title: generatedTitle,
+        date: Date.now(),
+        content: mdResult,
+        sourceType,
+        sourceName,
+        sourceText: sourceType === 'text' ? pastedText : undefined,
+      });
       setHistoryItems(getHistory());
     } catch (err: any) {
       setError(err.message || t.errorProcess);
@@ -232,6 +248,8 @@ export default function App() {
     setError(null);
     setUrl('');
     setPastedText('');
+    setActiveSource(null);
+    setShowOriginalText(false);
   };
 
   useEffect(() => {
@@ -336,6 +354,8 @@ export default function App() {
                     setMarkdownContent(item.content);
                     setReportTitleState(item.title);
                     setCurrentHistoryId(item.id);
+                    setActiveSource({ type: item.sourceType, name: item.sourceName, text: item.sourceText });
+                    setShowOriginalText(false);
                     setActiveTab('upload');
                     setIsSidebarOpen(false);
                   }}
@@ -499,14 +519,45 @@ export default function App() {
 
                   <div id="summary-content-to-print" className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 md:p-12 print-clean shadow-xl shadow-black/20">
                     {/* Intestazione del Documento */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 md:mb-8 md:pb-8 border-b border-slate-800 no-print">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 md:mb-8 md:pb-8 border-b border-slate-800 no-print">
+                      <div className="flex items-start gap-3">
                         <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl shrink-0">
                           <FileText className="w-6 h-6" />
                         </div>
                         <div>
                           <h2 className="text-2xl font-bold text-white">{reportTitleState || t.reportTitle}</h2>
                           <p className="text-sm text-slate-400 mt-1">{t.reportGenerated}</p>
+                          {activeSource && (
+                            <div className="mt-2 flex flex-col gap-1.5">
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <span className="font-medium text-slate-600 uppercase tracking-wider text-[10px]">{t.sourceLabel}:</span>
+                                {activeSource.type === 'youtube' && (
+                                  <a href={activeSource.name} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 hover:underline transition-colors truncate max-w-xs">
+                                    <LinkIcon className="w-3 h-3 shrink-0" />{activeSource.name}
+                                  </a>
+                                )}
+                                {activeSource.type === 'file' && (
+                                  <span className="flex items-center gap-1 text-slate-400 truncate max-w-xs">
+                                    <FileAudio className="w-3 h-3 shrink-0" />{activeSource.name}
+                                  </span>
+                                )}
+                                {activeSource.type === 'text' && (
+                                  <button
+                                    onClick={() => setShowOriginalText(v => !v)}
+                                    className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                                  >
+                                    <Type className="w-3 h-3 shrink-0" />
+                                    {showOriginalText ? t.sourceHideText : t.sourceShowText}
+                                  </button>
+                                )}
+                              </div>
+                              {activeSource.type === 'text' && activeSource.text && showOriginalText && (
+                                <div className="mt-1 p-3 bg-slate-800/60 border border-slate-700 rounded-lg text-xs text-slate-400 max-h-36 overflow-y-auto whitespace-pre-wrap leading-relaxed">
+                                  {activeSource.text}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
