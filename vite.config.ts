@@ -10,6 +10,7 @@ export default defineConfig(({mode}) => {
     define: {
       'process.env.AI_PROVIDER':       JSON.stringify(env.AI_PROVIDER || 'gemini'),
       'process.env.GEMINI_API_KEY':    JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_MODEL':      JSON.stringify(env.GEMINI_MODEL || 'gemini-2.5-flash'),
       'process.env.OPENAI_API_KEY':    JSON.stringify(env.OPENAI_API_KEY),
       'process.env.OPENAI_MODEL':      JSON.stringify(env.OPENAI_MODEL || 'gpt-4o'),
       'process.env.ANTHROPIC_API_KEY': JSON.stringify(env.ANTHROPIC_API_KEY),

@@ -3,6 +3,7 @@ import { translations, Language } from '../translations';
 import type { AIProvider } from './interface';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
   return new Promise((resolve, reject) => {
@@ -26,7 +27,7 @@ export class GeminiProvider implements AIProvider {
         ? "Genera un titolo molto breve (massimo 5-6 parole) che riassuma questo testo. Restituisci SOLO il titolo senza virgolette e nient'altro:"
         : 'Generate a very short title (max 5-6 words) that summarizes this text. Return ONLY the title without quotes and nothing else:';
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: GEMINI_MODEL,
         contents: [{ role: 'user', parts: [{ text: prompt + '\n\n' + summary.substring(0, 1500) }] }],
       });
       return response.text?.trim().replace(/^"|"$/g, '') || (lang === 'it' ? 'Riassunto Generato' : 'Generated Summary');
@@ -56,7 +57,7 @@ ${t.short_audio}
     try {
       const part = await fileToGenerativePart(file);
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: GEMINI_MODEL,
         config: { systemInstruction: t.system },
         contents: [{ role: 'user', parts: [part, { text: userPrompt }] }],
       });
@@ -90,7 +91,7 @@ ${text}
 `;
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: GEMINI_MODEL,
         config: { systemInstruction: t.system },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       });
@@ -125,7 +126,7 @@ ${transcript}
 `;
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: GEMINI_MODEL,
         config: {
           systemInstruction: t.systemYoutube,
           tools: [{ googleSearch: {} }],
