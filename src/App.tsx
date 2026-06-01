@@ -559,30 +559,30 @@ export default function App() {
                   <div id="summary-content-to-print" className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 md:p-12 print-clean shadow-xl shadow-black/20">
                     {/* Intestazione del Documento */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 md:mb-8 md:pb-8 border-b border-slate-800 no-print">
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 min-w-0 w-full">
                         <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl shrink-0">
                           <FileText className="w-6 h-6" />
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <h2 className="text-2xl font-bold text-white">{reportTitleState || t.reportTitle}</h2>
                           {activeSource && (
                             <div className="mt-2 flex flex-col gap-1.5">
-                              <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                <span className="font-medium text-slate-600 uppercase tracking-wider text-[10px]">{t.sourceLabel}:</span>
+                              <div className="flex items-center gap-1.5 text-xs text-slate-500 min-w-0">
+                                <span className="font-medium text-slate-600 uppercase tracking-wider text-[10px] shrink-0">{t.sourceLabel}:</span>
                                 {activeSource.type === 'youtube' && (
-                                  <a href={activeSource.name} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 hover:underline transition-colors truncate max-w-xs">
-                                    <LinkIcon className="w-3 h-3 shrink-0" />{activeSource.name}
+                                  <a href={activeSource.name} target="_blank" rel="noreferrer" className="flex items-center gap-1 min-w-0 text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">
+                                    <LinkIcon className="w-3 h-3 shrink-0" /><span className="truncate">{activeSource.name}</span>
                                   </a>
                                 )}
                                 {activeSource.type === 'file' && (
-                                  <span className="flex items-center gap-1 text-slate-400 truncate max-w-xs">
-                                    <FileAudio className="w-3 h-3 shrink-0" />{activeSource.name}
+                                  <span className="flex items-center gap-1 min-w-0 text-slate-400">
+                                    <FileAudio className="w-3 h-3 shrink-0" /><span className="truncate">{activeSource.name}</span>
                                   </span>
                                 )}
                                 {activeSource.type === 'text' && (
                                   <button
                                     onClick={() => setShowOriginalText(v => !v)}
-                                    className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                                    className="flex items-center gap-1 shrink-0 text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
                                   >
                                     <Type className="w-3 h-3 shrink-0" />
                                     {showOriginalText ? t.sourceHideText : t.sourceShowText}
