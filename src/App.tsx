@@ -526,7 +526,6 @@ export default function App() {
                         </div>
                         <div>
                           <h2 className="text-2xl font-bold text-white">{reportTitleState || t.reportTitle}</h2>
-                          <p className="text-sm text-slate-400 mt-1">{t.reportGenerated}</p>
                           {activeSource && (
                             <div className="mt-2 flex flex-col gap-1.5">
                               <div className="flex items-center gap-1.5 text-xs text-slate-500">
