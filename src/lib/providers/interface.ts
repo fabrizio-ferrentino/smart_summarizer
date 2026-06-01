@@ -1,4 +1,4 @@
-import type { Language } from '../translations';
+import type { Language } from '../translations.js';
 
 export interface AIProvider {
   readonly supportsAudio: boolean;

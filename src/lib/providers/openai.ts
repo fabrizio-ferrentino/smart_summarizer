@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { translations, Language } from '../translations';
-import type { AIProvider } from './interface';
+import { translations, Language } from '../translations.js';
+import type { AIProvider } from './interface.js';
 
 let _client: OpenAI | null = null;
 function getClient(): OpenAI {

@@ -1,8 +1,8 @@
-import { GeminiProvider } from './gemini';
-import { OpenAIProvider } from './openai';
-import { AnthropicProvider } from './anthropic';
-import type { AIProvider } from './interface';
-import type { Language } from '../translations';
+import { GeminiProvider } from './gemini.js';
+import { OpenAIProvider } from './openai.js';
+import { AnthropicProvider } from './anthropic.js';
+import type { AIProvider } from './interface.js';
+import type { Language } from '../translations.js';
 
 const providerName = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
 

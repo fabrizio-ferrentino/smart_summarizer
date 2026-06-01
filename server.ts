@@ -3,7 +3,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { getVideoDetails } from 'youtube-caption-extractor';
 import path from 'path';
-import { handleSummarize, type SummarizeInput } from './src/lib/providers';
+import { handleSummarize, type SummarizeInput } from './src/lib/providers/index.js';
 
 // Helper to extract video ID from various YouTube URL formats
 function extractVideoID(url: string): string | null {

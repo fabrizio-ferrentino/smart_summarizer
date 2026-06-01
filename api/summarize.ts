@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleSummarize, type SummarizeInput } from '../src/lib/providers';
+import { handleSummarize, type SummarizeInput } from '../src/lib/providers/index.js';
 
 // Reads the raw body if req.body is not already parsed
 async function getRawBody(req: VercelRequest): Promise<string> {

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { translations, Language } from '../translations';
-import type { AIProvider } from './interface';
+import { translations, Language } from '../translations.js';
+import type { AIProvider } from './interface.js';
 
 let _client: Anthropic | null = null;
 function getClient(): Anthropic {

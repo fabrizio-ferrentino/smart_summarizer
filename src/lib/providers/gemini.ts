@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
-import { translations, Language } from '../translations';
-import type { AIProvider } from './interface';
+import { translations, Language } from '../translations.js';
+import type { AIProvider } from './interface.js';
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
