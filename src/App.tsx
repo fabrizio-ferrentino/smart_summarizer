@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type } from 'lucide-react';
+import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type, Copy, Share2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { requestSummary, fileToBase64 } from './lib/api';
 import { supportsAudio, activeProviderName } from './lib/providerInfo';
@@ -95,6 +95,8 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSource, setActiveSource] = useState<{ type: 'file' | 'youtube' | 'text'; name: string; text?: string } | null>(null);
   const [showOriginalText, setShowOriginalText] = useState(false);
+  const [justCopied, setJustCopied] = useState(false);
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -242,6 +244,29 @@ export default function App() {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
+  const handleCopy = async () => {
+    if (!markdownContent) return;
+    try {
+      await navigator.clipboard.writeText(markdownContent);
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 2000);
+    } catch {
+      setError(t.errorProcess);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!markdownContent || !navigator.share) return;
+    try {
+      await navigator.share({
+        title: reportTitleState || t.reportTitle,
+        text: `${t.shareText}\n\n${markdownContent}`,
+      });
+    } catch {
+      // L'utente ha annullato la condivisione: nessun errore da mostrare.
+    }
+  };
+
   const resetAll = () => {
     setFile(null);
     setMarkdownContent(null);
@@ -252,6 +277,7 @@ export default function App() {
     setPastedText('');
     setActiveSource(null);
     setShowOriginalText(false);
+    setJustCopied(false);
   };
 
   useEffect(() => {
@@ -509,10 +535,21 @@ export default function App() {
                     <button onClick={resetAll} className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer">
                       <ArrowLeft className="w-4 h-4" />{t.btnNewAnalysis}
                     </button>
-                    <div className="flex items-center gap-3">
-                      <button onClick={handleEmailSummary} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
-                        <Mail className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnEmail}</span>
+                    <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+                      <button onClick={handleCopy} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
+                        {justCopied
+                          ? <><Check className="w-4 h-4 shrink-0 text-emerald-400" /><span className="truncate text-emerald-400">{t.btnCopied}</span></>
+                          : <><Copy className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnCopy}</span></>}
                       </button>
+                      {canShare ? (
+                        <button onClick={handleShare} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
+                          <Share2 className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnShare}</span>
+                        </button>
+                      ) : (
+                        <button onClick={handleEmailSummary} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
+                          <Mail className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnEmail}</span>
+                        </button>
+                      )}
                       <button onClick={handleExportPDF} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer">
                         <Download className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnExportPDF}</span>
                       </button>
