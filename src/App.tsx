@@ -96,6 +96,10 @@ export default function App() {
   const [activeSource, setActiveSource] = useState<{ type: 'file' | 'youtube' | 'text'; name: string; text?: string } | null>(null);
   const [showOriginalText, setShowOriginalText] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragDepth = useRef(0);
+  const exportRef = useRef<HTMLDivElement>(null);
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +109,18 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('smart-summarizer-lang', lang);
   }, [lang]);
+
+  // Chiude il menu Esporta al click fuori
+  useEffect(() => {
+    if (!isExportOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(event.target as Node)) {
+        setIsExportOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isExportOpen]);
 
   // Misura l'header per evitare che la sidebar lo copra
   useEffect(() => {
@@ -124,8 +140,25 @@ export default function App() {
 
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current += 1;
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    dragDepth.current -= 1;
+    if (dragDepth.current <= 0) {
+      dragDepth.current = 0;
+      setIsDragging(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    dragDepth.current = 0;
+    setIsDragging(false);
     if (e.dataTransfer.files?.[0]) handleFileSelection(e.dataTransfer.files[0]);
   };
 
@@ -226,6 +259,7 @@ export default function App() {
 
   const handleExportPDF = async () => {
     if (!markdownContent) return;
+    setIsExportOpen(false);
     setIsProcessing(true);
     try {
       const { generatePDF } = await import('./lib/generatePDF');
@@ -235,6 +269,13 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleExportMarkdown = async () => {
+    if (!markdownContent) return;
+    setIsExportOpen(false);
+    const { downloadMarkdown } = await import('./lib/exportFile');
+    downloadMarkdown(markdownContent, reportTitleState || t.reportTitle);
   };
 
   const handleEmailSummary = () => {
@@ -446,11 +487,17 @@ export default function App() {
                             </div>
                           ) : !file ? (
                             <div
-                              className="w-full border-2 border-dashed border-slate-800 rounded-lg p-10 flex flex-col items-center justify-center cursor-pointer hover:border-slate-700 transition-colors bg-slate-900/30 group"
-                              onDragOver={handleDragOver} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}
+                              className={cn(
+                                'w-full border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-200 group',
+                                isDragging
+                                  ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01]'
+                                  : 'border-slate-800 hover:border-slate-700 bg-slate-900/30'
+                              )}
+                              onDragOver={handleDragOver} onDragEnter={handleDragEnter} onDragLeave={handleDragLeave} onDrop={handleDrop}
+                              onClick={() => fileInputRef.current?.click()}
                             >
-                              <UploadCloud className="w-8 h-8 text-indigo-400 group-hover:text-indigo-300 transition-colors mb-4" />
-                              <p className="text-slate-300 font-medium text-lg mb-1 group-hover:text-white transition-colors">{t.uploadTitle}</p>
+                              <UploadCloud className={cn('w-8 h-8 mb-4 transition-all', isDragging ? 'text-indigo-300 scale-110' : 'text-indigo-400 group-hover:text-indigo-300')} />
+                              <p className="text-slate-300 font-medium text-lg mb-1 group-hover:text-white transition-colors">{isDragging ? t.uploadDropNow : t.uploadTitle}</p>
                               <p className="text-slate-500 text-sm mb-4">{t.uploadLimits}</p>
                               <input type="file" className="hidden" ref={fileInputRef} accept="audio/*,video/*" onChange={e => { if (e.target.files?.[0]) handleFileSelection(e.target.files[0]); }} />
                             </div>
@@ -550,9 +597,32 @@ export default function App() {
                           <Mail className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnEmail}</span>
                         </button>
                       )}
-                      <button onClick={handleExportPDF} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer">
-                        <Download className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnExportPDF}</span>
-                      </button>
+                      <div className="relative" ref={exportRef}>
+                        <button onClick={() => setIsExportOpen(o => !o)} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer">
+                          <Download className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnExport}</span>
+                          <ChevronDown className={cn('w-3.5 h-3.5 transition-transform duration-200', isExportOpen && 'rotate-180')} />
+                        </button>
+                        <AnimatePresence>
+                          {isExportOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                              transition={{ duration: 0.15, ease: 'easeOut' }}
+                              className="absolute right-0 mt-2 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl shadow-black/40 overflow-hidden z-20"
+                            >
+                              <div className="p-1">
+                                <button onClick={handleExportPDF} className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left cursor-pointer">
+                                  <FileText className="w-4 h-4 shrink-0" />{t.btnExportPDF}
+                                </button>
+                                <button onClick={handleExportMarkdown} className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left cursor-pointer">
+                                  <Type className="w-4 h-4 shrink-0" />{t.btnExportMarkdown}
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   </div>
 
