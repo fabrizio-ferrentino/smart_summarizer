@@ -5,10 +5,7 @@ import type { AIProvider } from './interface';
 let _client: OpenAI | null = null;
 function getClient(): OpenAI {
   if (!_client) {
-    _client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-      dangerouslyAllowBrowser: true,
-    });
+    _client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
   }
   return _client;
 }
@@ -24,17 +21,6 @@ const MIME_TO_FORMAT: Record<string, string> = {
   'audio/webm': 'webm',
   'video/webm': 'webm',
 };
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      resolve((reader.result as string).split(',')[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 export class OpenAIProvider implements AIProvider {
   readonly supportsAudio = true;
@@ -57,9 +43,9 @@ export class OpenAIProvider implements AIProvider {
     }
   }
 
-  async summarizeMeeting(file: File, lang: Language = 'en'): Promise<string> {
+  async summarizeMeeting(audioBase64: string, mimeType: string, lang: Language = 'en'): Promise<string> {
     const t = translations[lang].prompt;
-    const format = MIME_TO_FORMAT[file.type];
+    const format = MIME_TO_FORMAT[mimeType];
     if (!format) {
       throw new Error(
         lang === 'it'
@@ -84,7 +70,6 @@ ${t.h1_action_desc}
 ${t.short_audio}
 `;
     try {
-      const base64 = await fileToBase64(file);
       const response = await getClient().chat.completions.create({
         model: MODEL_AUDIO,
         messages: [
@@ -92,7 +77,7 @@ ${t.short_audio}
           {
             role: 'user',
             content: [
-              { type: 'input_audio', input_audio: { data: base64, format: format as any } },
+              { type: 'input_audio', input_audio: { data: audioBase64, format: format as any } },
               { type: 'text', text: userPrompt },
             ] as any,
           },

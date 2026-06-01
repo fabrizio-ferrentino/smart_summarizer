@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { summarizeMeeting, generateTitle, summarizePastedText, supportsAudio, activeProviderName } from './lib/providers';
+import { requestSummary, fileToBase64 } from './lib/api';
+import { supportsAudio, activeProviderName } from './lib/providerInfo';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import About from './components/About';
@@ -128,7 +129,7 @@ export default function App() {
 
   const handleFileSelection = (selectedFile: File) => {
     setError(null);
-    if (selectedFile.size > 19 * 1024 * 1024) {
+    if (selectedFile.size > 3 * 1024 * 1024) {
       setError(t.errorSize);
       return;
     }
@@ -146,7 +147,7 @@ export default function App() {
     setIsProcessing(true);
     setError(null);
     try {
-      let mdResult: string;
+      let result: { summary: string; title: string };
       let sourceName: string;
       let sourceType: 'file' | 'youtube' | 'text';
 
@@ -166,8 +167,7 @@ export default function App() {
           throw new Error(e.error || t.errorYoutubeFetch);
         }
         const data = await response.json();
-        const { summarizeYoutubeText } = await import('./lib/providers');
-        mdResult = await summarizeYoutubeText(data.text, url, lang);
+        result = await requestSummary({ kind: 'youtube', transcript: data.text, url, lang });
         sourceName = url;
         sourceType = 'youtube';
       } else if (activeTab === 'text') {
@@ -176,7 +176,7 @@ export default function App() {
           setIsProcessing(false);
           return;
         }
-        mdResult = await summarizePastedText(pastedText, lang);
+        result = await requestSummary({ kind: 'text', text: pastedText, lang });
         sourceName = `Text (${new Date().toLocaleDateString()})`;
         sourceType = 'text';
       } else {
@@ -185,12 +185,14 @@ export default function App() {
           setIsProcessing(false);
           return;
         }
-        mdResult = await summarizeMeeting(file, lang);
+        const audioBase64 = await fileToBase64(file);
+        result = await requestSummary({ kind: 'file', audioBase64, mimeType: file.type, lang });
         sourceName = file.name;
         sourceType = 'file';
       }
 
-      const generatedTitle = await generateTitle(mdResult, lang);
+      const mdResult = result.summary;
+      const generatedTitle = result.title;
       const id = Date.now().toString();
 
       setMarkdownContent(mdResult);

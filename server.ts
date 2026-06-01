@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import { getVideoDetails } from 'youtube-caption-extractor';
 import path from 'path';
+import { handleSummarize, type SummarizeInput } from './src/lib/providers';
 
 // Helper to extract video ID from various YouTube URL formats
 function extractVideoID(url: string): string | null {
@@ -14,7 +16,22 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  app.use(express.json({ limit: '12mb' }));
+
+  // API Route
+  app.post('/api/summarize', async (req, res) => {
+    try {
+      const input = req.body as SummarizeInput;
+      if (!input || !input.kind) {
+        return res.status(400).json({ error: 'Missing "kind" in request body' });
+      }
+      const result = await handleSummarize(input);
+      res.json(result);
+    } catch (error: any) {
+      console.error('Summarize API Error:', error);
+      res.status(500).json({ error: error?.message || 'Error during processing.' });
+    }
+  });
 
   // API Route for YouTube Transcript
   app.post('/api/youtube', async (req, res) => {

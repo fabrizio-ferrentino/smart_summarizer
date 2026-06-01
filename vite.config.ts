@@ -8,13 +8,9 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.AI_PROVIDER':       JSON.stringify(env.AI_PROVIDER || 'gemini'),
-      'process.env.GEMINI_API_KEY':    JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_MODEL':      JSON.stringify(env.GEMINI_MODEL || 'gemini-2.5-flash'),
-      'process.env.OPENAI_API_KEY':    JSON.stringify(env.OPENAI_API_KEY),
-      'process.env.OPENAI_MODEL':      JSON.stringify(env.OPENAI_MODEL || 'gpt-4o'),
-      'process.env.ANTHROPIC_API_KEY': JSON.stringify(env.ANTHROPIC_API_KEY),
-      'process.env.ANTHROPIC_MODEL':   JSON.stringify(env.ANTHROPIC_MODEL || 'claude-sonnet-4-6'),
+      // Only AI_PROVIDER ends up in the bundle: it is used by the client to know
+      // the name of the provider and whether audio is supported.
+      'process.env.AI_PROVIDER': JSON.stringify(env.AI_PROVIDER || 'gemini'),
     },
     resolve: {
       alias: {

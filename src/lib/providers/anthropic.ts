@@ -5,10 +5,7 @@ import type { AIProvider } from './interface';
 let _client: Anthropic | null = null;
 function getClient(): Anthropic {
   if (!_client) {
-    _client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
-      dangerouslyAllowBrowser: true,
-    });
+    _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   }
   return _client;
 }
@@ -41,7 +38,7 @@ export class AnthropicProvider implements AIProvider {
     }
   }
 
-  async summarizeMeeting(_file: File, lang: Language = 'en'): Promise<string> {
+  async summarizeMeeting(_audioBase64: string, _mimeType: string, lang: Language = 'en'): Promise<string> {
     throw new Error(translations[lang].app.uploadNotSupported);
   }
 

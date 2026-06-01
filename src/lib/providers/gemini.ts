@@ -5,18 +5,6 @@ import type { AIProvider } from './interface';
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
-function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64data = (reader.result as string).split(',')[1];
-      resolve({ inlineData: { data: base64data, mimeType: file.type } });
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 export class GeminiProvider implements AIProvider {
   readonly supportsAudio = true;
   readonly name = 'Gemini';
@@ -36,7 +24,7 @@ export class GeminiProvider implements AIProvider {
     }
   }
 
-  async summarizeMeeting(file: File, lang: Language = 'en'): Promise<string> {
+  async summarizeMeeting(audioBase64: string, mimeType: string, lang: Language = 'en'): Promise<string> {
     const t = translations[lang].prompt;
     const userPrompt = `
 ${t.introFile}
@@ -55,7 +43,7 @@ ${t.h1_action_desc}
 ${t.short_audio}
 `;
     try {
-      const part = await fileToGenerativePart(file);
+      const part = { inlineData: { data: audioBase64, mimeType } };
       const response = await ai.models.generateContent({
         model: GEMINI_MODEL,
         config: { systemInstruction: t.system },
