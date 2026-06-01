@@ -2,8 +2,17 @@ import { GoogleGenAI } from '@google/genai';
 import { translations, Language } from '../translations';
 import type { AIProvider } from './interface';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+let _ai: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI {
+  if (!_ai) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error('GEMINI_API_KEY is not set on the server.');
+    _ai = new GoogleGenAI({ apiKey });
+  }
+  return _ai;
+}
 
 export class GeminiProvider implements AIProvider {
   readonly supportsAudio = true;
@@ -14,7 +23,7 @@ export class GeminiProvider implements AIProvider {
       const prompt = lang === 'it'
         ? "Genera un titolo molto breve (massimo 5-6 parole) che riassuma questo testo. Restituisci SOLO il titolo senza virgolette e nient'altro:"
         : 'Generate a very short title (max 5-6 words) that summarizes this text. Return ONLY the title without quotes and nothing else:';
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: GEMINI_MODEL,
         contents: [{ role: 'user', parts: [{ text: prompt + '\n\n' + summary.substring(0, 1500) }] }],
       });
@@ -44,7 +53,7 @@ ${t.short_audio}
 `;
     try {
       const part = { inlineData: { data: audioBase64, mimeType } };
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: GEMINI_MODEL,
         config: { systemInstruction: t.system },
         contents: [{ role: 'user', parts: [part, { text: userPrompt }] }],
@@ -78,7 +87,7 @@ ${t.textContent}
 ${text}
 `;
     try {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: GEMINI_MODEL,
         config: { systemInstruction: t.system },
         contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -113,7 +122,7 @@ ${urlLine}${t.youtube_content}
 ${transcript}
 `;
     try {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: GEMINI_MODEL,
         config: {
           systemInstruction: t.systemYoutube,
