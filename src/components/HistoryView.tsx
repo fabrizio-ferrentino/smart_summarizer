@@ -13,7 +13,7 @@ interface HistoryViewProps {
   onClear: () => void;
 }
 
-// Restituisce key STABILE (non dipende dalla lingua) + label localizzata separata
+// Returns a STABLE key (language-independent) + a separate localized label
 function groupByDate(
   history: SavedSummary[],
   locale: string,
@@ -31,7 +31,7 @@ function groupByDate(
     else if (diff < 2 * oneDay) key = '__yesterday__';
     else if (diff < 7 * oneDay) key = '__week__';
     else {
-      // Key stabile: "2025-03" — non dipende dalla lingua
+      // Stable key: "2025-03" — language-independent
       const d = new Date(item.date);
       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
@@ -105,8 +105,8 @@ export default function HistoryView({ history, lang, onSelect, onDelete, onClear
         </AnimatePresence>
       </div>
 
-      {/* List — nessun AnimatePresence sul mapping dei gruppi per evitare
-          re-animazioni al cambio lingua */}
+      {/* List — no AnimatePresence on the group mapping to avoid
+          re-animations on language change */}
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-6 space-y-4"
         style={{ scrollbarWidth: 'thin', scrollbarColor: '#1e293b transparent' }}
@@ -127,7 +127,7 @@ export default function HistoryView({ history, lang, onSelect, onDelete, onClear
           </motion.div>
         ) : (
           grouped.map((group, gi) => (
-            // key stabile → React non smonta/rimonta al cambio lingua
+            // stable key → React doesn't unmount/remount on language change
             <div key={group.key}>
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-600 px-2 mb-1.5">
                 {group.label}

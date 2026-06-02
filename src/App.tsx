@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Languages, Clock, Type, Copy, Share2 } from 'lucide-react';
+import { FileAudio, UploadCloud, Loader2, FileText, Download, Mail, ArrowLeft, AlertCircle, Sparkles, Link as LinkIcon, ChevronDown, Check, Clock, Type, Copy, Share2, Pencil, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import ReactQuill from 'react-quill-new';
+import { markdownToHtml, htmlToMarkdown, markdownToPlainText, normalizeActionItems } from './lib/convert';
 import { requestSummary, fileToBase64 } from './lib/api';
 import { supportsAudio, activeProviderName } from './lib/providerInfo';
 import { cn } from './lib/utils';
@@ -9,6 +12,17 @@ import About from './components/About';
 import HistoryView from './components/HistoryView';
 import { translations, Language } from './lib/translations';
 import { saveHistory, getHistory, deleteHistoryItem, clearHistory, SavedSummary } from './lib/history';
+
+// Simple, friendly toolbar for the summary visual editor
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline'],
+    [{ list: 'ordered' }, { list: 'bullet' }, { list: 'check' }],
+    ['link'],
+    ['clean'],
+  ],
+};
 
 const LanguageSelector = ({ current, onChange }: { current: Language; onChange: (l: Language) => void }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,9 +38,9 @@ const LanguageSelector = ({ current, onChange }: { current: Language; onChange: 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const languages: { code: Language; label: string }[] = [
-    { code: 'en', label: 'English' },
-    { code: 'it', label: 'Italiano' }
+  const languages: { code: Language; label: string; flag: string }[] = [
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' }
   ];
 
   return (
@@ -35,7 +49,7 @@ const LanguageSelector = ({ current, onChange }: { current: Language; onChange: 
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-slate-600 text-white rounded-md pl-3 pr-2.5 py-1.5 outline-none text-xs transition-colors cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
       >
-        <Languages className="w-3.5 h-3.5 text-indigo-400" />
+        <span className="text-sm leading-none">{languages.find(l => l.code === current)?.flag}</span>
         <span className="font-medium">{languages.find(l => l.code === current)?.label}</span>
         <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 transition-transform duration-200", isOpen && "rotate-180")} />
       </button>
@@ -64,7 +78,10 @@ const LanguageSelector = ({ current, onChange }: { current: Language; onChange: 
                       : "text-slate-300 hover:bg-slate-700 hover:text-white"
                   )}
                 >
-                  {lang.label}
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm leading-none">{lang.flag}</span>
+                    {lang.label}
+                  </span>
                   {current === lang.code && <Check className="w-3 h-3" />}
                 </button>
               ))}
@@ -97,6 +114,8 @@ export default function App() {
   const [showOriginalText, setShowOriginalText] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editHtml, setEditHtml] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const dragDepth = useRef(0);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -110,7 +129,7 @@ export default function App() {
     localStorage.setItem('smart-summarizer-lang', lang);
   }, [lang]);
 
-  // Chiude il menu Esporta al click fuori
+  // Close the Export menu on outside click
   useEffect(() => {
     if (!isExportOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -122,7 +141,7 @@ export default function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isExportOpen]);
 
-  // Misura l'header per evitare che la sidebar lo copra
+  // Measure the header so the sidebar doesn't cover it
   useEffect(() => {
     const update = () => {
       if (headerRef.current) {
@@ -226,7 +245,7 @@ export default function App() {
         sourceType = 'file';
       }
 
-      const mdResult = result.summary;
+      const mdResult = normalizeActionItems(result.summary);
       const generatedTitle = result.title;
       const id = Date.now().toString();
 
@@ -271,11 +290,11 @@ export default function App() {
     }
   };
 
-  const handleExportMarkdown = async () => {
+  const handleExportText = async () => {
     if (!markdownContent) return;
     setIsExportOpen(false);
-    const { downloadMarkdown } = await import('./lib/exportFile');
-    downloadMarkdown(markdownContent, reportTitleState || t.reportTitle);
+    const { downloadText } = await import('./lib/exportFile');
+    downloadText(markdownToPlainText(markdownContent), reportTitleState || t.reportTitle);
   };
 
   const handleEmailSummary = () => {
@@ -304,7 +323,38 @@ export default function App() {
         text: `${t.shareText}\n\n${markdownContent}`,
       });
     } catch {
-      // L'utente ha annullato la condivisione: nessun errore da mostrare.
+      // The user cancelled sharing: no error to show.
+    }
+  };
+
+  const startEdit = () => {
+    if (!markdownContent) return;
+    setEditHtml(markdownToHtml(markdownContent));
+    setIsEditing(true);
+    setIsExportOpen(false);
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditHtml('');
+  };
+
+  const saveEdit = () => {
+    const updated = htmlToMarkdown(editHtml);
+    setMarkdownContent(updated);
+    setIsEditing(false);
+    // Also update the history, if this summary is saved
+    if (currentHistoryId && activeSource) {
+      saveHistory({
+        id: currentHistoryId,
+        title: reportTitleState || t.reportTitle,
+        date: Date.now(),
+        content: updated,
+        sourceType: activeSource.type,
+        sourceName: activeSource.name,
+        sourceText: activeSource.text,
+      });
+      setHistoryItems(getHistory());
     }
   };
 
@@ -319,6 +369,8 @@ export default function App() {
     setActiveSource(null);
     setShowOriginalText(false);
     setJustCopied(false);
+    setIsEditing(false);
+    setEditHtml('');
   };
 
   useEffect(() => {
@@ -420,11 +472,12 @@ export default function App() {
                   history={historyItems}
                   lang={lang}
                   onSelect={(item) => {
-                    setMarkdownContent(item.content);
+                    setMarkdownContent(normalizeActionItems(item.content));
                     setReportTitleState(item.title);
                     setCurrentHistoryId(item.id);
                     setActiveSource({ type: item.sourceType, name: item.sourceName, text: item.sourceText });
                     setShowOriginalText(false);
+                    setIsEditing(false);
                     setActiveTab('upload');
                     setIsSidebarOpen(false);
                   }}
@@ -448,7 +501,7 @@ export default function App() {
                 </motion.div>
               ) : !markdownContent ? (
 
-                /* ── Caricamento ed Elabrazione ─────────────────────────────────── */
+                /* ── Upload & Processing ─────────────────────────────────── */
                 <motion.div key="upload" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex-1 flex flex-col">
                   <div className="text-center mb-10 mt-8">
                     <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4">
@@ -576,13 +629,26 @@ export default function App() {
 
               ) : (
 
-                /* ── Schermata del Riassunto Generato (Solo Preview) ────────────────── */
+                /* ── Generated Summary Screen (Preview only) ────────────────── */
                 <motion.div key="result" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="flex-1 flex flex-col">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-                    <button onClick={resetAll} className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer">
+                    <button onClick={resetAll} disabled={isEditing} className="text-slate-400 hover:text-white flex items-center gap-2 transition-colors font-medium text-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                       <ArrowLeft className="w-4 h-4" />{t.btnNewAnalysis}
                     </button>
+                    {isEditing ? (
+                      <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+                        <button onClick={cancelEdit} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
+                          <X className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnCancel}</span>
+                        </button>
+                        <button onClick={saveEdit} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all shadow-lg shadow-indigo-900/20 cursor-pointer">
+                          <Check className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnSave}</span>
+                        </button>
+                      </div>
+                    ) : (
                     <div className="flex items-center flex-wrap gap-2 sm:gap-3">
+                      <button onClick={startEdit} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
+                        <Pencil className="w-4 h-4 shrink-0" /><span className="truncate">{t.btnEditMode}</span>
+                      </button>
                       <button onClick={handleCopy} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition-all cursor-pointer">
                         {justCopied
                           ? <><Check className="w-4 h-4 shrink-0 text-emerald-400" /><span className="truncate text-emerald-400">{t.btnCopied}</span></>
@@ -615,8 +681,8 @@ export default function App() {
                                 <button onClick={handleExportPDF} className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left cursor-pointer">
                                   <FileText className="w-4 h-4 shrink-0" />{t.btnExportPDF}
                                 </button>
-                                <button onClick={handleExportMarkdown} className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left cursor-pointer">
-                                  <Type className="w-4 h-4 shrink-0" />{t.btnExportMarkdown}
+                                <button onClick={handleExportText} className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-left cursor-pointer">
+                                  <Type className="w-4 h-4 shrink-0" />{t.btnExportText}
                                 </button>
                               </div>
                             </motion.div>
@@ -624,10 +690,11 @@ export default function App() {
                         </AnimatePresence>
                       </div>
                     </div>
+                    )}
                   </div>
 
                   <div id="summary-content-to-print" className="bg-slate-900/50 border border-slate-800 rounded-xl p-5 md:p-12 print-clean shadow-xl shadow-black/20">
-                    {/* Intestazione del Documento */}
+                    {/* Document Header */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-6 md:mb-8 md:pb-8 border-b border-slate-800 no-print">
                       <div className="flex items-start gap-3 min-w-0 w-full">
                         <div className="p-3 bg-indigo-500/20 text-indigo-400 rounded-xl shrink-0">
@@ -670,10 +737,21 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Rendering Markdown Nativo e Pulito */}
-                    <div className="markdown-body">
-                      <ReactMarkdown>{markdownContent}</ReactMarkdown>
-                    </div>
+                    {/* Rendering — preview or visual editor */}
+                    {isEditing ? (
+                      <div className="quill-editor">
+                        <ReactQuill
+                          theme="snow"
+                          value={editHtml}
+                          onChange={setEditHtml}
+                          modules={QUILL_MODULES}
+                        />
+                      </div>
+                    ) : (
+                      <div className="markdown-body">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdownContent}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}

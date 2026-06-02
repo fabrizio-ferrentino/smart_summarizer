@@ -82,3 +82,31 @@
 .markdown-body strong {
   @apply font-semibold text-white;
 }
+
+/* ── Visual editor (Quill) adapted to the dark theme ───────────────────────── */
+.quill-editor .ql-toolbar {
+  @apply bg-slate-800 border-slate-700 rounded-t-lg;
+}
+.quill-editor .ql-container {
+  @apply bg-slate-950/50 border-slate-700 rounded-b-lg text-slate-200 text-base;
+  min-height: 380px;
+}
+.quill-editor .ql-editor {
+  min-height: 380px;
+  line-height: 1.7;
+}
+.quill-editor .ql-editor.ql-blank::before {
+  @apply text-slate-600 not-italic;
+}
+/* Light toolbar icons and text */
+.quill-editor .ql-toolbar .ql-stroke { stroke: #cbd5e1; }
+.quill-editor .ql-toolbar .ql-fill { fill: #cbd5e1; }
+.quill-editor .ql-toolbar .ql-picker { color: #cbd5e1; }
+.quill-editor .ql-toolbar button:hover .ql-stroke,
+.quill-editor .ql-toolbar button.ql-active .ql-stroke { stroke: #818cf8; }
+.quill-editor .ql-toolbar button:hover .ql-fill,
+.quill-editor .ql-toolbar button.ql-active .ql-fill { fill: #818cf8; }
+/* Toolbar dropdown (e.g. headings) on dark background */
+.quill-editor .ql-picker-options {
+  @apply bg-slate-800 border-slate-700;
+}

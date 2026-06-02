@@ -7,7 +7,7 @@ function extractVideoID(url: string): string | null {
   return match && match[7].length === 11 ? match[7] : null;
 }
 
-// Helper: legge il body raw se req.body non è già parsato
+// Helper: reads the raw body if req.body is not already parsed
 async function getRawBody(req: VercelRequest): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Parsa il body — usa req.body se disponibile, altrimenti leggi raw
+    // Parse the body — use req.body if available, otherwise read raw
     let body = req.body;
     if (!body || typeof body === 'string') {
       const raw = typeof body === 'string' ? body : await getRawBody(req);

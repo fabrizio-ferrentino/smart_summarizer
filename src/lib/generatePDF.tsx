@@ -13,12 +13,12 @@ const styles = StyleSheet.create({
   bullet: { fontSize: 10.5, color: '#334155', lineHeight: 1.65, marginBottom: 3, paddingLeft: 12 },
   link: { color: '#2563eb', textDecoration: 'underline' },
   divider: { borderBottomWidth: 1, borderBottomColor: '#e2e8f0', marginVertical: 10 },
-  // Citazioni (blockquote)
+  // Quotes (blockquote)
   quote: {
     fontSize: 10.5, color: '#475569', lineHeight: 1.6, marginVertical: 6,
     paddingLeft: 10, borderLeftWidth: 3, borderLeftColor: '#cbd5e1',
   },
-  // Tabelle
+  // Tables
   table: { marginTop: 8, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 4 },
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   tableCell: { flex: 1, padding: 6 },
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
   tableCellText: { fontSize: 9.5, color: '#334155' },
 });
 
-// Testo con bold inline (**...**) e link cliccabili ([testo](url))
+// Text with inline bold (**...**) and clickable links ([text](url))
 const RichText = ({ text, style }: { text: string; style?: any }) => {
   const tokens = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return (
@@ -112,7 +112,7 @@ function buildFilename(title: string): string {
   return `${slug || 'summary'}-${date}.pdf`;
 }
 
-// Rimuove emoji e caratteri simbolici non gestiti dai font PDF standard
+// Removes emoji and symbol characters not handled by standard PDF fonts
 function cleanLine(raw: string): string {
   return raw
     .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
@@ -137,10 +137,10 @@ function parseMarkdown(markdown: string): Block[] {
     const line = cleanLine(raw[i]).trim();
     if (!line) { i++; continue; }
 
-    // Tabella: riga corrente + riga successiva di separazione (|---|---|)
+    // Table: current row + following separator row (|---|---|)
     if (isTableRow(line) && i + 1 < raw.length && isTableSeparator(cleanLine(raw[i + 1]))) {
       const header = parseRow(line);
-      i += 2; // salta header + separatore
+      i += 2; // skip header + separator
       const rows: string[][] = [];
       while (i < raw.length && isTableRow(cleanLine(raw[i]).trim())) {
         rows.push(parseRow(cleanLine(raw[i]).trim()));
