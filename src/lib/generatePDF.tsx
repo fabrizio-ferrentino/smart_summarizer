@@ -11,7 +11,9 @@ const styles = StyleSheet.create({
   h3: { fontSize: 11, fontFamily: 'Helvetica-Bold', color: '#1e293b', marginTop: 10, marginBottom: 4 },
   paragraph: { fontSize: 10.5, color: '#334155', lineHeight: 1.65, marginBottom: 6 },
   bullet: { fontSize: 10.5, color: '#334155', lineHeight: 1.65, marginBottom: 3, paddingLeft: 12 },
+  numbered: { fontSize: 10.5, color: '#334155', lineHeight: 1.65, marginBottom: 3, paddingLeft: 12 },
   link: { color: '#2563eb', textDecoration: 'underline' },
+  code: { fontFamily: 'Courier', fontSize: 9.5, color: '#0f172a' },
   divider: { borderBottomWidth: 1, borderBottomColor: '#e2e8f0', marginVertical: 10 },
   // Quotes (blockquote)
   quote: {
@@ -28,16 +30,29 @@ const styles = StyleSheet.create({
   tableCellText: { fontSize: 9.5, color: '#334155' },
 });
 
-// Text with inline bold (**...**) and clickable links ([text](url))
+// Inline markdown for the PDF: bold (**...**), italic (*...*), code (`...`),
+// and clickable links ([text](url)). The URL pattern tolerates one level of
+// nested parentheses (e.g. wikipedia-style "(disambiguation)" links).
+const LINK = '\\[[^\\]]+\\]\\((?:[^()]|\\([^()]*\\))*\\)';
+const TOKEN_RE = new RegExp(`(\\*\\*[^*]+\\*\\*|\\*[^*]+\\*|\`[^\`]+\`|${LINK})`, 'g');
+const BOLD_RE = /^\*\*([\s\S]+)\*\*$/;
+const ITALIC_RE = /^\*([\s\S]+)\*$/;
+const CODE_RE = /^`([\s\S]+)`$/;
+const LINK_RE = /^\[([^\]]+)\]\(((?:[^()]|\([^()]*\))*)\)$/;
+
 const RichText = ({ text, style }: { text: string; style?: any }) => {
-  const tokens = text.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
+  const tokens = text.split(TOKEN_RE);
   return (
     <Text style={style}>
       {tokens.map((tok, i) => {
         if (!tok) return null;
-        const bold = /^\*\*([^*]+)\*\*$/.exec(tok);
+        const bold = BOLD_RE.exec(tok);
         if (bold) return <Text key={i} style={{ fontFamily: 'Helvetica-Bold' }}>{bold[1]}</Text>;
-        const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(tok);
+        const italic = ITALIC_RE.exec(tok);
+        if (italic) return <Text key={i} style={{ fontFamily: 'Helvetica-Oblique' }}>{italic[1]}</Text>;
+        const code = CODE_RE.exec(tok);
+        if (code) return <Text key={i} style={styles.code}>{code[1]}</Text>;
+        const link = LINK_RE.exec(tok);
         if (link) return <Link key={i} src={link[2]} style={styles.link}>{link[1]}</Link>;
         return <Text key={i}>{tok}</Text>;
       })}
@@ -65,7 +80,7 @@ const PDFDocument = ({ blocks, t, title }: { blocks: Block[], t: any, title: str
           case 'h3': return <Text key={i} style={styles.h3}>{block.content}</Text>;
           case 'quote': return <RichText key={i} text={block.content} style={styles.quote} />;
           case 'bullet': return <RichText key={i} text={`•  ${block.content}`} style={styles.bullet} />;
-          case 'numbered': return <RichText key={i} text={block.content} style={styles.bullet} />;
+          case 'numbered': return <RichText key={i} text={block.content} style={styles.numbered} />;
           case 'paragraph': return <RichText key={i} text={block.content} style={styles.paragraph} />;
           case 'table':
             return (
@@ -142,8 +157,11 @@ function parseMarkdown(markdown: string): Block[] {
       const header = parseRow(line);
       i += 2; // skip header + separator
       const rows: string[][] = [];
-      while (i < raw.length && isTableRow(cleanLine(raw[i]).trim())) {
-        rows.push(parseRow(cleanLine(raw[i]).trim()));
+      while (i < raw.length) {
+        const next = cleanLine(raw[i]).trim();
+        if (!next) { i++; continue; }     // tolerate blank lines between rows
+        if (!isTableRow(next)) break;     // stop only at a genuine non-table line
+        rows.push(parseRow(next));
         i++;
       }
       blocks.push({ type: 'table', header, rows });
@@ -154,8 +172,10 @@ function parseMarkdown(markdown: string): Block[] {
     else if (line.startsWith('## ')) blocks.push({ type: 'h2', content: line.slice(3).trim() });
     else if (line.startsWith('# ')) blocks.push({ type: 'h1', content: line.slice(2).trim() });
     else if (line.startsWith('> ')) blocks.push({ type: 'quote', content: line.slice(2).trim() });
-    else if (/^[-*]\s+\[.\]\s+/.test(line)) blocks.push({ type: 'bullet', content: line.replace(/^[-*]\s+\[(.)\]\s+/, '[$1] ') });
-    else if (/^\[.\]\s+/.test(line)) blocks.push({ type: 'bullet', content: line });
+    // Checkbox list items ("- [ ] task" or bare "[x] task"): drop the marker and
+    // render as a clean bullet, consistent with the rest of the report.
+    else if (/^[-*]\s+\[.\]\s+/.test(line)) blocks.push({ type: 'bullet', content: line.replace(/^[-*]\s+\[.\]\s+/, '') });
+    else if (/^\[.\]\s+/.test(line)) blocks.push({ type: 'bullet', content: line.replace(/^\[.\]\s+/, '') });
     else if (/^[-*]\s+/.test(line)) blocks.push({ type: 'bullet', content: line.replace(/^[-*]\s+/, '') });
     else if (/^\d+\.\s+/.test(line)) blocks.push({ type: 'numbered', content: line });
     else blocks.push({ type: 'paragraph', content: line });

@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import TurndownService from 'turndown';
+import { tables } from 'turndown-plugin-gfm';
 
 /**
  * Normalizes any markdown checkboxes "- [ ]" / "- [x]" into simple bullets "- ".
@@ -16,6 +17,10 @@ const turndown = new TurndownService({
   bulletListMarker: '-',
   codeBlockStyle: 'fenced',
 });
+
+// GFM tables: without this, turndown drops <table> markup and a markdown
+// table in the summary becomes a stack of bare paragraphs after editing.
+turndown.use(tables);
 
 // Preserves Action Items checkboxes in the HTML -> Markdown round-trip.
 // Without this rule turndown drops the <input type="checkbox"> and
@@ -46,11 +51,12 @@ turndown.addRule('taskListItems', {
 /** Converts the summary markdown to HTML, for the visual editor (WYSIWYG). */
 export function markdownToHtml(markdown: string): string {
   const html = marked.parse(markdown, { async: false }) as string;
-  // marked produces <li><input type="checkbox"> ...</li>, but the Quill editor
-  // uses <li data-list="checked|unchecked">. Convert so checkboxes aren't lost.
+  // marked produces <li ...><input type="checkbox" ...> ...</li>, but the Quill
+  // editor uses <li data-list="checked|unchecked">. Convert so checkboxes aren't
+  // lost. Tolerates attributes on <li> and matches the checkbox <input> only.
   return html.replace(
-    /<li>\s*<input([^>]*)>\s*/g,
-    (_m, attrs) => `<li data-list="${/checked/.test(attrs) ? 'checked' : 'unchecked'}">`
+    /<li[^>]*>\s*<input\b([^>]*\btype="checkbox"[^>]*)>\s*/g,
+    (_m, attrs) => `<li data-list="${/\bchecked\b/.test(attrs) ? 'checked' : 'unchecked'}">`
   );
 }
 
